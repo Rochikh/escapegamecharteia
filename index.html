@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission IA — L'Escape Game de la Charte | Bruxelles Formation</title>
+<meta name="description" content="Escape game 3D pour découvrir la Charte IA de Bruxelles Formation : 5 salles, 5 engagements, un Permis IA BF à la clé.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bf-blue:#16345f;
+    --jaune:#edcb0c; --vert:#4eae33; --turquoise:#47b7a4; --orange:#f5810c; --mauve:#524797;
+    --rouge:#e03134;
+    --pk-radius:12px 12px 48px 48px / 12px 12px 96px 96px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  [hidden]{display:none !important;}
+  html,body{height:100%; overflow:hidden;}
+  body{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:16px; line-height:1.5; color:var(--bf-blue);
+    background:#0d2240;
+  }
+  h1,h2,h3,h4,.sg{font-family:'Space Grotesk', Arial, sans-serif;}
+  button{font-family:'Space Grotesk', Arial, sans-serif; font-size:16px; cursor:pointer;}
+
+  #scene{position:fixed; inset:0; display:block;}
+  #scene:focus{outline:none;}
+
+  /* ---------- generic overlay panels ---------- */
+  .overlay{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(13,34,64,.55); backdrop-filter:blur(3px); z-index:40; padding:16px;
+  }
+  .panel{
+    background:#fff; border-radius:var(--pk-radius);
+    width:min(720px, 100%); max-height:92vh; overflow-y:auto;
+    padding:36px 36px 48px; box-shadow:0 24px 60px rgba(0,0,0,.35);
+  }
+  .panel h2{font-size:26px; margin-bottom:6px;}
+  .panel .kicker{
+    display:inline-block; font-family:'Space Grotesk'; font-weight:700; font-size:14px;
+    letter-spacing:.08em; text-transform:uppercase; color:#fff; background:var(--bf-blue);
+    padding:4px 14px; border-radius:8px 8px 18px 18px; margin-bottom:14px;
+  }
+  .panel p{margin:10px 0;}
+  .narration{
+    border-left:6px solid var(--bf-blue); background:#f3f6fb;
+    padding:14px 18px; border-radius:0 12px 24px 12px; margin:14px 0; font-style:italic;
+  }
+  .btn{
+    display:inline-block; border:none; color:#fff; background:var(--bf-blue);
+    padding:13px 28px; font-weight:700; font-size:17px;
+    border-radius:10px 10px 26px 26px / 10px 10px 40px 40px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover,.btn:focus-visible{transform:translateY(-2px); box-shadow:0 8px 18px rgba(22,52,95,.35); outline:3px solid rgba(22,52,95,.3); outline-offset:2px;}
+  .btn.secondary{background:#fff; color:var(--bf-blue); border:2px solid var(--bf-blue);}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn-row{display:flex; gap:12px; flex-wrap:wrap; margin-top:22px;}
+
+  .feedback{
+    margin-top:18px; padding:14px 18px; border-radius:12px; display:none;
+  }
+  .feedback.bad{display:block; background:#fdeceb; border:2px solid var(--rouge); color:#8c1d1f;}
+  .feedback.good{display:block; background:#def5d8; border:2px solid var(--vert); color:#1d4d14;}
+
+  /* ---------- intro ---------- */
+  #intro .logo-row{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+  #intro h1{font-size:32px; line-height:1.15;}
+  #intro .keys{display:flex; gap:8px;}
+  #intro .keys span{width:22px; height:74px; display:block; border-radius:6px 6px 20px 20px / 6px 6px 40px 40px;}
+  #intro label{display:block; font-weight:bold; margin:18px 0 6px; font-family:'Space Grotesk';}
+  #intro input[type=text]{
+    width:100%; padding:12px 16px; font-size:18px; border:2px solid var(--bf-blue);
+    border-radius:10px 10px 22px 22px; font-family:Arial;
+  }
+  #intro .chk{display:flex; align-items:center; gap:10px; margin-top:14px; font-size:16px;}
+  #intro .chk input{width:20px; height:20px; accent-color:var(--bf-blue);}
+  .help-keys{font-size:15px; color:#41557a; margin-top:14px;}
+  .help-keys kbd{
+    font-family:'Space Grotesk'; background:#eef2f8; border:1px solid #c4cfdf;
+    border-bottom-width:3px; border-radius:6px; padding:1px 7px; font-size:14px;
+  }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:fixed; top:0; left:0; right:0; z-index:30;
+    display:flex; align-items:center; gap:14px; padding:12px 18px;
+    pointer-events:none;
+  }
+  #hud > *{pointer-events:auto;}
+  #hud .badge{
+    background:#fff; border-radius:10px 10px 22px 22px; padding:8px 16px;
+    font-family:'Space Grotesk'; font-weight:700; box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  #progress{display:flex; gap:6px; align-items:flex-end; background:#fff; padding:8px 14px 10px; border-radius:10px 10px 22px 22px; box-shadow:0 4px 14px rgba(0,0,0,.25);}
+  #progress .pk{
+    width:16px; height:44px; border-radius:4px 4px 14px 14px / 4px 4px 26px 26px;
+    background:#dfe5ee; transition:background .4s;
+  }
+  #timer{min-width:84px; text-align:center; display:none;}
+  #hud .spacer{flex:1;}
+  #hud button.badge{border:none; color:var(--bf-blue);}
+  #hud button.badge:hover{background:#eef2f8;}
+  #hint{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,.95); color:var(--bf-blue); z-index:30;
+    padding:10px 22px; border-radius:10px 10px 24px 24px; font-family:'Space Grotesk';
+    font-weight:500; box-shadow:0 6px 16px rgba(0,0,0,.3); max-width:92vw; text-align:center;
+  }
+  #crosshair{
+    position:fixed; top:50%; left:50%; width:8px; height:8px; margin:-4px 0 0 -4px;
+    border-radius:50%; background:rgba(255,255,255,.85); z-index:25; display:none;
+    box-shadow:0 0 0 2px rgba(22,52,95,.5);
+  }
+
+  /* ---------- rooms menu ---------- */
+  #roomsMenu .room-btn{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:#fff; border:2px solid #dfe5ee; padding:12px 16px; margin-top:10px;
+    border-radius:10px 10px 24px 24px; font-size:17px;
+  }
+  #roomsMenu .room-btn:hover:not(:disabled){border-color:var(--bf-blue);}
+  #roomsMenu .room-btn .dot{width:18px; height:42px; border-radius:4px 4px 14px 14px; flex:none;}
+  #roomsMenu .room-btn .done{margin-left:auto; color:var(--vert); font-weight:bold;}
+
+  /* ---------- puzzles ---------- */
+  .seg{cursor:pointer; padding:1px 3px; border-radius:6px; transition:background .15s;}
+  .seg:hover{background:#fdf3c3;}
+  .seg.sel{background:var(--jaune); outline:2px solid #b89c06;}
+  .doc-card{
+    border:2px solid #dfe5ee; border-radius:10px 10px 22px 22px; padding:12px 16px; margin-top:12px;
+  }
+  .doc-card .doc-title{font-weight:bold; font-family:'Space Grotesk'; margin-bottom:8px;}
+  .choice-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .choice-row button{
+    border:2px solid var(--bf-blue); background:#fff; color:var(--bf-blue);
+    padding:7px 14px; border-radius:8px 8px 18px 18px; font-size:15px;
+  }
+  .choice-row button.sel{background:var(--bf-blue); color:#fff;}
+  .gauge-wrap{margin:16px 0 4px;}
+  .gauge{height:22px; background:#eef2f8; border-radius:11px; overflow:hidden; border:2px solid #dfe5ee;}
+  .gauge > div{height:100%; width:0%; background:linear-gradient(90deg,var(--orange),var(--rouge)); transition:width .4s;}
+  .obs-btn{
+    display:block; width:100%; text-align:left; background:#fff; border:2px solid #dfe5ee;
+    padding:11px 16px; margin-top:10px; border-radius:10px 10px 22px 22px; font-size:16px; font-family:Arial;
+  }
+  .obs-btn.sel{border-color:var(--mauve); background:#efedf8;}
+  .fake-image{
+    border:3px solid var(--mauve); border-radius:12px 12px 36px 36px; padding:18px 20px;
+    background:linear-gradient(160deg,#efedf8,#fff); margin:14px 0; font-style:italic;
+  }
+
+  /* ---------- unlock / slogan ---------- */
+  .slogan-big{
+    font-family:'Space Grotesk'; font-weight:700; font-size:30px; line-height:1.2;
+    padding:22px 26px; color:#fff; border-radius:var(--pk-radius); margin:18px 0;
+  }
+  .rules-list{margin:12px 0 0 4px; padding-left:18px;}
+  .rules-list li{margin:7px 0;}
+  .fragment{
+    display:inline-flex; align-items:center; gap:10px; margin-top:14px;
+    font-family:'Space Grotesk'; font-weight:700; font-size:20px;
+    background:#f3f6fb; border:2px dashed var(--bf-blue); padding:10px 18px; border-radius:14px;
+  }
+  .fragment b{font-size:30px;}
+
+  /* ---------- keypad ---------- */
+  #keypadGrid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0;}
+  #keypadGrid button{
+    font-size:24px; font-weight:700; padding:18px 0; background:#fff; color:var(--bf-blue);
+    border:3px solid var(--bf-blue); border-radius:10px 10px 28px 28px;
+  }
+  #keypadGrid button:hover{background:#eef2f8;}
+  #codeDisplay{
+    font-family:'Space Grotesk'; font-weight:700; font-size:34px; letter-spacing:.35em;
+    text-align:center; background:#0d2240; color:var(--jaune); padding:14px; border-radius:14px;
+    min-height:66px;
+  }
+
+  /* ---------- certificate ---------- */
+  #permis{
+    border:4px solid var(--bf-blue); border-radius:var(--pk-radius); padding:28px 30px 40px;
+    background:linear-gradient(170deg,#fff 60%, #f3f6fb); margin-top:18px;
+  }
+  #permis h3{font-size:28px;}
+  #permis .holder{font-size:24px; font-weight:700; font-family:'Space Grotesk'; margin:10px 0;}
+  #permis ul{list-style:none; margin-top:14px;}
+  #permis li{margin:8px 0; padding-left:30px; position:relative;}
+  #permis li::before{
+    content:""; position:absolute; left:0; top:3px; width:13px; height:20px;
+    border-radius:3px 3px 10px 10px; background:var(--c, var(--bf-blue));
+  }
+  #permis .meta{margin-top:16px; color:#41557a; font-size:15px;}
+
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+  @media (max-width:640px){
+    .panel{padding:24px 20px 36px;}
+    #hud{flex-wrap:wrap;}
+    .slogan-big{font-size:24px;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene" tabindex="0" aria-label="Vue 3D du Bureau du futur de Bruxelles Formation"></canvas>
+<div id="crosshair" aria-hidden="true"></div>
+
+<!-- HUD -->
+<header id="hud" hidden>
+  <span class="badge">Mission IA <span style="color:#8aa0c4">· BF</span></span>
+  <div id="progress" aria-label="Progression : salles déverrouillées" role="img"></div>
+  <span class="badge" id="timer" aria-label="Chronomètre">00:00</span>
+  <span class="spacer"></span>
+  <button class="badge" id="btnRooms">Salles</button>
+  <button class="badge" id="btnLook" title="Activer la visée à la souris (clic pour interagir, Échap pour sortir)">Mode immersif</button>
+  <button class="badge" id="btnReset">Recommencer</button>
+</header>
+<div id="hint" hidden></div>
+
+<!-- INTRO -->
+<div class="overlay" id="intro">
+  <div class="panel" role="dialog" aria-labelledby="introTitle">
+    <div class="logo-row">
+      <div class="keys" aria-hidden="true">
+        <span style="background:#edcb0c"></span><span style="background:#47b7a4"></span>
+        <span style="background:#f5810c"></span><span style="background:#4eae33"></span>
+        <span style="background:#524797"></span>
+      </div>
+      <span class="kicker" style="margin:0">Bruxelles Formation</span>
+    </div>
+    <h1 id="introTitle">Mission IA — L'Escape Game de la Charte</h1>
+    <div class="narration">
+      « Bonjour. Je suis NOVA, l'intelligence artificielle du Bureau du futur.
+      Par mesure de précaution, j'ai verrouillé les 5 salles de ce bureau — une par engagement
+      de la Charte IA de Bruxelles Formation. Prouvez-moi que vous maîtrisez chacun d'eux,
+      récupérez les 4 fragments du code de sortie… et je vous délivrerai votre Permis IA BF. »
+    </div>
+    <label for="playerName">Votre prénom</label>
+    <input type="text" id="playerName" maxlength="30" autocomplete="given-name" placeholder="Ex. : Camille">
+    <div class="chk">
+      <input type="checkbox" id="chkTimer">
+      <label for="chkTimer" style="margin:0; font-weight:normal; font-family:Arial;">Activer le chronomètre (mode compétition entre équipes)</label>
+    </div>
+    <p class="help-keys">
+      Déplacement : <kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches ·
+      Regard : glisser la souris (ou « Mode immersif ») ·
+      Ouvrir une porte : cliquez dessus ou approchez-vous et pressez <kbd>E</kbd>.
+      Pas joueur ? Le bouton <strong>Salles</strong> ouvre chaque salle d'un clic.
+    </p>
+    <div class="btn-row">
+      <button class="btn" id="btnStart">Commencer la mission</button>
+      <button class="btn secondary" id="btnContinue" hidden>Reprendre ma partie</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOMS MENU -->
+<div class="overlay" id="roomsMenu" hidden>
+  <div class="panel" role="dialog" aria-labelledby="roomsTitle">
+    <span class="kicker">Navigation accessible</span>
+    <h2 id="roomsTitle">Choisir une salle</h2>
+    <div id="roomsList"></div>
+    <div class="btn-row"><button class="btn secondary" data-close>Fermer</button></div>
+  </div>
+</div>
+
+<!-- ROOM PANEL (dynamic) -->
+<div class="overlay" id="roomOverlay" hidden>
+  <div class="panel" role="dialog" id="roomPanel" aria-live="polite"></div>
+</div>
+
+<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+<script>
+  // Fallback CDN (version identique, épinglée) si unpkg est bloqué par le réseau
+  if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"><\/script>');
+</script>
+<script>
+"use strict";
+
+if (!window.THREE){
+  document.querySelector("#intro .panel").innerHTML =
+    "<h1>Mission IA — L'Escape Game de la Charte</h1>" +
+    "<p style='margin-top:14px'>Impossible de charger le moteur 3D (accès aux CDN bloqué par votre réseau).</p>" +
+    "<p>Vérifiez votre connexion internet, puis rechargez la page (F5).</p>";
+  throw new Error("THREE.js introuvable");
+}
+/* =====================================================================
+   Mission IA — L'Escape Game de la Charte (Bruxelles Formation)
+   ===================================================================== */
+
+const COLORS = {
+  blue:0x16345f, jaune:0xedcb0c, vert:0x4eae33,
+  turquoise:0x47b7a4, orange:0xf5810c, mauve:0x524797
+};
+
+const ROOMS = [
+  {
+    id:0, name:"Responsabilité et esprit critique", accent:"#edcb0c", hex:COLORS.jaune,
+    slogan:"L'IA propose, l'humain décide.",
+    fragment:"A",
+    rules:[
+      "Vérifier les faits et les sources de tout contenu généré.",
+      "Adapter le contenu au contexte avant de le diffuser.",
+      "Assumer le contenu final : pas d'excuse « c'est l'IA »."
+    ],
+    intro:"« Salle 1 : Responsabilité. Sur l'écran, un document généré par IA est prêt à partir vers 300 destinataires. Mon capteur d'esprit critique détecte 3 erreurs factuelles glissées dans le texte. Trouvez-les avant de valider l'envoi. »"
+  },
+  {
+    id:1, name:"Protection des données", accent:"#47b7a4", hex:COLORS.turquoise,
+    slogan:"Interne sécurisé ≠ externe public.",
+    fragment:"C",
+    rules:[
+      "Outils sécurisés (Copilot M365) : OK, dans le respect du RGPD.",
+      "Outils externes : uniquement données publiques ou anonymisées.",
+      "Dans le doute, on n'utilise pas."
+    ],
+    intro:"« Salle 2 : Données. Six documents traînent sur le bureau. Triez chacun vers le bon outil : Copilot M365, un outil externe autorisé… ou pas d'IA du tout. Une seule erreur et l'alarme RGPD se déclenche. »"
+  },
+  {
+    id:2, name:"Transparence des usages", accent:"#f5810c", hex:COLORS.orange,
+    slogan:"Si l'IA a vraiment contribué, ça se dit.",
+    fragment:"G",
+    rules:[
+      "Signalement obligatoire : contenus pédagogiques, évaluations, communications externes ou à diffusion large.",
+      "4 marquages : IA-A, IA-C, IA-G, IA-D.",
+      "Pas requis pour l'exploration interne ou les corrections rapides."
+    ],
+    intro:"« Salle 3 : Transparence. Quatre collègues décrivent leur usage de l'IA. Associez chaque situation au bon marquage — ces quatre lettres forment le code de sortie, ouvrez l'œil. »"
+  },
+  {
+    id:3, name:"Usage responsable et proportionné", accent:"#4eae33", hex:COLORS.vert,
+    slogan:"Tout faire avec l'IA est aussi absurde que ne rien faire avec.",
+    fragment:"D",
+    rules:[
+      "Utiliser l'IA quand elle fait gagner du temps, améliore la qualité ou aide sur une tâche complexe.",
+      "Jamais à la place des interactions humaines essentielles.",
+      "Penser sobriété : une vidéo générée coûte bien plus qu'un texte."
+    ],
+    intro:"« Salle 4 : Proportion. Voici 6 usages envisagés par l'équipe. Validez les 3 usages pertinents et écartez les 3 absurdes. Attention : chaque mauvais choix fait grimper la jauge de surconsommation. »"
+  },
+  {
+    id:4, name:"Droits, inclusion et valeurs", accent:"#524797", hex:COLORS.mauve,
+    slogan:"L'IA n'est pas une zone grise.",
+    fragment:"ordre",
+    rules:[
+      "Citer si un contenu est repris (propriété intellectuelle).",
+      "Éviter les contenus biaisés ou stéréotypés.",
+      "Rester accessible à toutes et tous."
+    ],
+    intro:"« Salle 5 : Valeurs. Une image générée par IA est proposée pour la prochaine brochure BF. Mon œil critique y voit 3 problèmes. Et le vôtre ? »"
+  }
+];
+
+const FINAL_CODE = "ACGD";
+const CHARTE_URL = "https://rochikh.github.io/charte-ia-bf/";
+
+/* ---------------- state ---------------- */
+const SAVE_KEY = "missionIA-BF-v1";
+let state = { name:"", timerOn:false, started:false, solved:[false,false,false,false,false], elapsed:0, won:false };
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (s && Array.isArray(s.solved) && s.solved.length===5) state = Object.assign(state, s);
+  }catch(e){}
+}
+const solvedCount = () => state.solved.filter(Boolean).length;
+
+/* ---------------- DOM helpers ---------------- */
+const $ = sel => document.querySelector(sel);
+function el(tag, attrs={}, html){ const e=document.createElement(tag); Object.assign(e, attrs); if(html!==undefined) e.innerHTML=html; return e; }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
+/* =====================================================================
+   THREE.JS — Le Bureau du futur
+   ===================================================================== */
+const canvas = $("#scene");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d2240);
+scene.fog = new THREE.Fog(0x0d2240, 18, 34);
+
+const camera = new THREE.PerspectiveCamera(68, 1, 0.1, 80);
+let yaw = 0, pitch = 0;            // yaw=0 → regard vers le centre du hall
+const player = new THREE.Vector3(0, 1.65, 5.5);
+
+/* lights — kept minimal for office laptops */
+scene.add(new THREE.AmbientLight(0xbfd0e8, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+sun.position.set(6, 12, 4);
+scene.add(sun);
+const hallGlow = new THREE.PointLight(0xfff3d0, 0.7, 22);
+hallGlow.position.set(0, 5.5, 0);
+scene.add(hallGlow);
+
+/* floor + ceiling */
+const HALL_R = 10;
+scene.add(new THREE.Mesh(
+  new THREE.CircleGeometry(HALL_R, 48).rotateX(-Math.PI/2),
+  new THREE.MeshLambertMaterial({color:0xe9eef6})
+));
+const ring = new THREE.Mesh(
+  new THREE.RingGeometry(2.6, 3.0, 48).rotateX(-Math.PI/2),
+  new THREE.MeshBasicMaterial({color:COLORS.blue})
+);
+ring.position.y = 0.01; scene.add(ring);
+const ceiling = new THREE.Mesh(
+  new THREE.CircleGeometry(HALL_R, 48).rotateX(Math.PI/2),
+  new THREE.MeshLambertMaterial({color:0x16345f})
+);
+ceiling.position.y = 6.5; scene.add(ceiling);
+
+/* hexagonal walls : 5 room doors + 1 exit door */
+const WALL_N = 6;
+const wallMat = new THREE.MeshLambertMaterial({color:0xf6f8fc});
+const doorMeshes = [];   // raycast targets
+let exitDoor = null;
+
+function makeLabelTexture(text, sub, bgColor){
+  const cv = document.createElement("canvas"); cv.width=512; cv.height=160;
+  const g = cv.getContext("2d");
+  g.fillStyle = "#ffffff"; g.fillRect(0,0,512,160);
+  g.fillStyle = bgColor; g.fillRect(0,0,18,160);
+  g.fillStyle = "#16345f";
+  g.font = "700 46px 'Space Grotesk', Arial"; g.textBaseline="middle";
+  g.fillText(text, 42, 58);
+  g.font = "400 30px Arial"; g.fillStyle="#41557a";
+  g.fillText(sub, 42, 114);
+  const t = new THREE.CanvasTexture(cv);
+  t.anisotropy = 4;
+  return t;
+}
+
+/* a "piano key" extruded shape used for doors & totems */
+function pianoKeyShape(w, h){
+  const s = new THREE.Shape();
+  const rTop = w*0.08, rBot = w*0.5;
+  s.moveTo(-w/2+rTop, 0);
+  s.lineTo(w/2-rTop, 0);
+  s.quadraticCurveTo(w/2, 0, w/2, rTop);
+  s.lineTo(w/2, h-rBot);
+  s.quadraticCurveTo(w/2, h, 0, h);
+  s.quadraticCurveTo(-w/2, h, -w/2, h-rBot);
+  s.lineTo(-w/2, rTop);
+  s.quadraticCurveTo(-w/2, 0, -w/2+rTop, 0);
+  return s;
+}
+function pianoKeyMesh(w, h, depth, color){
+  const geo = new THREE.ExtrudeGeometry(pianoKeyShape(w,h), {depth, bevelEnabled:false});
+  // shape grows upward with rounded END at top -> flip so rounded corners are at bottom
+  geo.rotateZ(Math.PI);
+  geo.translate(0, h, 0);
+  return new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color}));
+}
+
+for (let i=0; i<WALL_N; i++){
+  const a = (i/WALL_N) * Math.PI*2 + Math.PI/6;
+  const cx = Math.sin(a)*HALL_R, cz = Math.cos(a)*HALL_R;
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(HALL_R*1.12, 6.5, 0.4), wallMat);
+  wall.position.set(cx, 3.25, cz);
+  wall.lookAt(0, 3.25, 0);
+  scene.add(wall);
+
+  const isExit = (i === WALL_N-1);
+  const room = isExit ? null : ROOMS[i];
+  const color = isExit ? COLORS.blue : room.hex;
+
+  const group = new THREE.Group();
+  group.position.set(Math.sin(a)*(HALL_R-0.45), 0, Math.cos(a)*(HALL_R-0.45));
+  group.lookAt(0,0,0);
+
+  // door frame
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.6, 4.2, 0.25), new THREE.MeshLambertMaterial({color:0xd7deea}));
+  frame.position.y = 2.1;
+  group.add(frame);
+  // colored piano-key door panel
+  const panel = pianoKeyMesh(2.0, 3.7, 0.18, color);
+  panel.position.set(0, 0.05, 0.18);
+  group.add(panel);
+  // label above
+  const label = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.4, 1.06),
+    new THREE.MeshBasicMaterial({map: makeLabelTexture(
+      isExit ? "Porte de sortie" : `Salle ${i+1}`,
+      isExit ? "Code requis : 4 fragments" : room.name,
+      isExit ? "#16345f" : room.accent)})
+  );
+  label.position.set(0, 5.0, 0.25);
+  group.add(label);
+
+  panel.userData = { type: isExit ? "exit" : "room", roomId: isExit ? -1 : i, group, isExit };
+  frame.userData = panel.userData;
+  label.userData = panel.userData;
+  doorMeshes.push(panel, frame, label);
+  if (isExit) exitDoor = panel;
+  scene.add(group);
+}
+
+/* decorative piano-key totems around the hall ring */
+ROOMS.forEach((r, i)=>{
+  const a = (i/5)*Math.PI*2 + 0.4;
+  const t = pianoKeyMesh(0.7, 2.4 + (i%2)*0.6, 0.5, r.hex);
+  t.position.set(Math.sin(a)*4.6, 0, Math.cos(a)*4.6);
+  t.rotation.y = a + Math.PI;
+  scene.add(t);
+});
+/* central desk hologram */
+const desk = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 0.9, 24), new THREE.MeshLambertMaterial({color:0x16345f}));
+desk.position.y = 0.45; scene.add(desk);
+const holo = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(0.5, 0),
+  new THREE.MeshBasicMaterial({color:0x47b7a4, wireframe:true})
+);
+holo.position.y = 1.8; scene.add(holo);
+
+/* unlock visual : open door + glow */
+function markDoorUnlocked(roomId){
+  const mesh = doorMeshes.find(m => m.userData.roomId===roomId && m.geometry.type==="ExtrudeGeometry");
+  if (!mesh) return;
+  mesh.rotation.y = -1.15;           // door swings open
+  mesh.position.x = -0.85;
+  mesh.material = new THREE.MeshLambertMaterial({color:mesh.material.color, emissive:mesh.material.color, emissiveIntensity:0.35});
+}
+function markExitOpen(){
+  if (!exitDoor) return;
+  exitDoor.rotation.y = -1.2; exitDoor.position.x = -0.9;
+}
+
+/* ---------------- controls ---------------- */
+const keys = {};
+addEventListener("keydown", e=>{
+  keys[e.code]=true;
+  if (e.code==="KeyE" && !overlayOpen()) tryInteract();
+});
+addEventListener("keyup", e=>keys[e.code]=false);
+
+let dragging=false, lastX=0, lastY=0, pointerLocked=false;
+canvas.addEventListener("mousedown", e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; });
+addEventListener("mouseup", ()=>dragging=false);
+addEventListener("mousemove", e=>{
+  if (pointerLocked){
+    yaw -= e.movementX*0.0023; pitch -= e.movementY*0.0023;
+  } else if (dragging){
+    yaw -= (e.clientX-lastX)*0.005; pitch -= (e.clientY-lastY)*0.005;
+    lastX=e.clientX; lastY=e.clientY;
+  }
+  pitch = Math.max(-1.2, Math.min(1.2, pitch));
+});
+canvas.addEventListener("touchstart", e=>{ const t=e.touches[0]; dragging=true; lastX=t.clientX; lastY=t.clientY; }, {passive:true});
+canvas.addEventListener("touchmove", e=>{
+  const t=e.touches[0];
+  yaw -= (t.clientX-lastX)*0.006; pitch -= (t.clientY-lastY)*0.006;
+  pitch = Math.max(-1.2, Math.min(1.2, pitch));
+  lastX=t.clientX; lastY=t.clientY;
+}, {passive:true});
+
+$("#btnLook").addEventListener("click", ()=> canvas.requestPointerLock && canvas.requestPointerLock());
+document.addEventListener("pointerlockchange", ()=>{
+  pointerLocked = document.pointerLockElement === canvas;
+  $("#crosshair").style.display = pointerLocked ? "block" : "none";
+});
+
+/* click-to-interact (fallback "navigation par clic") */
+const raycaster = new THREE.Raycaster();
+const mouseV = new THREE.Vector2();
+let dragMoved = 0;
+canvas.addEventListener("mousedown", e=>{ dragMoved=0; });
+canvas.addEventListener("mousemove", ()=>{ if(dragging) dragMoved++; });
+canvas.addEventListener("click", e=>{
+  if (overlayOpen() || dragMoved>4) return;
+  if (pointerLocked) mouseV.set(0,0);
+  else mouseV.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
+  raycaster.setFromCamera(mouseV, camera);
+  const hit = raycaster.intersectObjects(doorMeshes)[0];
+  if (hit) activateDoor(hit.object.userData);
+});
+
+function nearestDoor(){
+  let best=null, bestD=3.6;
+  for (const m of doorMeshes){
+    if (m.geometry.type!=="ExtrudeGeometry") continue;
+    const p = new THREE.Vector3(); m.userData.group.getWorldPosition(p);
+    const d = p.distanceTo(player);
+    if (d<bestD){ bestD=d; best=m.userData; }
+  }
+  return best;
+}
+function tryInteract(){ const d = nearestDoor(); if (d) activateDoor(d); }
+
+function activateDoor(data){
+  if (document.pointerLockElement) document.exitPointerLock();
+  if (data.type==="exit") openKeypad();
+  else openRoom(data.roomId);
+}
+
+/* ---------------- game loop ---------------- */
+const clock = new THREE.Clock();
+let lastTimerSave = 0;
+function tick(){
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  if (state.started && !state.won && !overlayOpen()){
+    const sp = 4.2*dt;
+    const f = new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)); // avant = direction du regard
+    const r = new THREE.Vector3(f.z,0,-f.x);                      // gauche
+    if (keys.KeyW||keys.KeyZ||keys.ArrowUp)    player.addScaledVector(f, sp);
+    if (keys.KeyS||keys.ArrowDown)             player.addScaledVector(f,-sp);
+    if (keys.KeyA||keys.KeyQ||keys.ArrowLeft)  player.addScaledVector(r, sp);
+    if (keys.KeyD||keys.ArrowRight)            player.addScaledVector(r,-sp);
+    const len = Math.hypot(player.x, player.z);
+    if (len > HALL_R-1.1){ player.x *= (HALL_R-1.1)/len; player.z *= (HALL_R-1.1)/len; }
+    if (len < 2.1 && len>0){ player.x *= 2.1/len; player.z *= 2.1/len; }
+
+    if (state.timerOn){
+      state.elapsed += dt;
+      const m = Math.floor(state.elapsed/60), s = Math.floor(state.elapsed%60);
+      $("#timer").textContent = String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+      if (state.elapsed - lastTimerSave > 5){ lastTimerSave = state.elapsed; save(); }
+    }
+    const d = nearestDoor();
+    setHint(d ? (d.type==="exit"
+        ? "Porte de sortie — cliquez ou pressez E pour composer le code"
+        : `Salle ${d.roomId+1} · ${ROOMS[d.roomId].name} — cliquez ou pressez E`) : null);
+  }
+
+  holo.rotation.y += dt*0.8; holo.rotation.x += dt*0.3;
+  camera.position.copy(player);
+  camera.rotation.set(0,0,0);
+  camera.rotateY(yaw); camera.rotateX(pitch);
+  renderer.render(scene, camera);
+}
+function resize(){
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize); resize(); tick();
+
+/* =====================================================================
+   UI — HUD, hints, menus
+   ===================================================================== */
+function overlayOpen(){
+  return !["intro","roomsMenu","roomOverlay"].every(id => $("#"+id).hidden);
+}
+let hintTxt = null, hintUntil = 0;
+function setHint(t, holdMs){
+  if (holdMs) hintUntil = performance.now() + holdMs;
+  else if (performance.now() < hintUntil) return;   // un message « collant » est affiché
+  if (t===hintTxt) return;
+  hintTxt = t;
+  const h = $("#hint");
+  if (t){ h.textContent = t; h.hidden = false; } else h.hidden = true;
+}
+function refreshProgress(){
+  const wrap = $("#progress"); wrap.innerHTML="";
+  ROOMS.forEach((r,i)=>{
+    const k = el("span",{className:"pk", title:`Salle ${i+1} : ${r.name}`});
+    if (state.solved[i]) k.style.background = r.accent;
+    wrap.appendChild(k);
+  });
+  wrap.setAttribute("aria-label", `Progression : ${solvedCount()} salle(s) sur 5 déverrouillée(s)`);
+}
+
+$("#btnRooms").addEventListener("click", ()=>{
+  const list = $("#roomsList"); list.innerHTML="";
+  ROOMS.forEach((r,i)=>{
+    const b = el("button",{className:"room-btn"});
+    b.innerHTML = `<span class="dot" style="background:${r.accent}"></span>
+      <span><strong>Salle ${i+1}</strong> — ${esc(r.name)}</span>
+      ${state.solved[i] ? '<span class="done">✓ déverrouillée</span>' : ""}`;
+    b.addEventListener("click", ()=>{ $("#roomsMenu").hidden=true; openRoom(i); });
+    list.appendChild(b);
+  });
+  const ex = el("button",{className:"room-btn"});
+  ex.innerHTML = `<span class="dot" style="background:#16345f"></span>
+    <span><strong>Porte de sortie</strong> — composer le code final</span>`;
+  ex.addEventListener("click", ()=>{ $("#roomsMenu").hidden=true; openKeypad(); });
+  list.appendChild(ex);
+  $("#roomsMenu").hidden = false;
+});
+$("#roomsMenu [data-close]").addEventListener("click", ()=> $("#roomsMenu").hidden = true);
+
+$("#btnReset").addEventListener("click", ()=>{
+  if (confirm("Recommencer la mission ? Votre progression sera effacée.")){
+    localStorage.removeItem(SAVE_KEY); location.reload();
+  }
+});
+
+/* =====================================================================
+   ROOMS — narration, puzzles, quiz, unlock
+   ===================================================================== */
+const panel = $("#roomPanel");
+function showPanel(html){
+  panel.innerHTML = html;
+  $("#roomOverlay").hidden = false;
+  panel.scrollTop = 0;
+  const f = panel.querySelector("button, input"); if (f) f.focus();
+}
+function closePanel(){ $("#roomOverlay").hidden = true; canvas.focus(); }
+
+function roomHeader(r){
+  return `<span class="kicker" style="background:${r.accent}; color:${r.id===0?'#5d4f06':'#fff'}">Salle ${r.id+1} · Engagement ${r.id+1}</span>
+          <h2>${esc(r.name)}</h2>`;
+}
+
+function openRoom(i){
+  const r = ROOMS[i];
+  if (state.solved[i]){ showUnlock(r, true); return; }
+  showPanel(`${roomHeader(r)}
+    <div class="narration">${esc(r.intro)}</div>
+    <div class="btn-row">
+      <button class="btn" id="goPuzzle">Relever le défi</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  $("#goPuzzle").addEventListener("click", ()=>PUZZLES[i](r));
+  $("#backHall").addEventListener("click", closePanel);
+}
+
+function feedbackBox(){ return `<div class="feedback" id="fb" role="alert"></div>`; }
+function setFb(ok, msg){
+  const fb = $("#fb"); fb.className = "feedback " + (ok?"good":"bad"); fb.innerHTML = msg;
+}
+
+/* ---- quiz step shared by all rooms ---- */
+function showQuiz(r, q){
+  showPanel(`${roomHeader(r)}
+    <h3 style="margin-top:6px">Dernière vérification de NOVA</h3>
+    <p style="font-size:18px; margin-top:14px"><strong>${esc(q.question)}</strong></p>
+    <div class="btn-row" id="quizOpts"></div>
+    ${feedbackBox()}
+    <div class="btn-row"><button class="btn" id="quizNext" disabled>Déverrouiller la salle</button></div>`);
+  const opts = $("#quizOpts");
+  q.options.forEach((opt, idx)=>{
+    const b = el("button",{className:"btn secondary"}, esc(opt));
+    b.addEventListener("click", ()=>{
+      if (idx === q.answer){
+        setFb(true, `<strong>Exact.</strong> ${q.explain}`);
+        $("#quizNext").disabled = false;
+        opts.querySelectorAll("button").forEach(x=>x.disabled=true);
+        b.style.background = "var(--vert)"; b.style.color="#fff"; b.style.borderColor="var(--vert)";
+      } else {
+        setFb(false, `<strong>Pas tout à fait.</strong> ${q.explain}`);
+      }
+    });
+    opts.appendChild(b);
+  });
+  $("#quizNext").addEventListener("click", ()=>unlockRoom(r));
+}
+
+function unlockRoom(r){
+  state.solved[r.id] = true; save(); refreshProgress(); markDoorUnlocked(r.id);
+  showUnlock(r, false);
+}
+function showUnlock(r, revisit){
+  const frag = r.fragment === "ordre"
+    ? `<span>Indice final :</span> <b>l'ordre du code est A · C · G · D</b>`
+    : `<span>Fragment du code :</span> <b>${r.fragment}</b>`;
+  showPanel(`${roomHeader(r)}
+    <p>${revisit ? "Salle déjà déverrouillée — voici votre mémo." :
+      "« Salle déverrouillée. Voici l'essentiel à retenir — et votre récompense. »"}</p>
+    <div class="slogan-big" style="background:${r.accent}; color:${r.id===0?'#3d3404':'#fff'}">« ${esc(r.slogan)} »</div>
+    <ul class="rules-list">${r.rules.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <div class="fragment">${frag}</div>
+    <div class="btn-row">
+      <button class="btn" id="backHall">Retour au hall</button>
+      ${solvedCount()===5 ? '<button class="btn" id="goExit" style="background:var(--vert)">Aller à la porte de sortie</button>' : ""}
+    </div>`);
+  $("#backHall").addEventListener("click", closePanel);
+  const g = $("#goExit"); if (g) g.addEventListener("click", openKeypad);
+}
+
+/* =====================================================================
+   THE 5 PUZZLES
+   ===================================================================== */
+const PUZZLES = [
+
+/* ---- Salle 1 : chasse aux 3 erreurs factuelles ---- */
+function(r){
+  const segs = [
+    {t:"Bruxelles Formation accompagne chaque année des milliers de chercheurs d'emploi bruxellois.", err:false},
+    {t:"Fondée en 1735, bien avant l'invention de l'électricité,", err:true,
+     why:"Une date impossible : Bruxelles Formation est un service public récent, pas une institution du XVIIIᵉ siècle. L'IA « hallucine » volontiers des dates plausibles en apparence."},
+    {t:"l'institution propose des formations dans de nombreux domaines.", err:false},
+    {t:"Selon une étude interne, 97 % des apprenants trouvent un emploi en moins d'une semaine.", err:true,
+     why:"Statistique inventée et invraisemblable : toujours exiger la source d'un chiffre avant de le diffuser."},
+    {t:"Les formations couvrent le numérique, les langues et les métiers techniques.", err:false},
+    {t:"Comme l'a déclaré Albert Einstein : « L'IA est l'avenir de la formation professionnelle »,", err:true,
+     why:"Citation fausse : Einstein est mort en 1955, bien avant l'IA générative. Les fausses citations sont une hallucination classique."},
+    {t:"l'innovation pédagogique reste au cœur du projet.", err:false}
+  ];
+  showPanel(`${roomHeader(r)}
+    <p><strong>Cliquez sur les 3 passages erronés</strong> de ce texte généré par IA, puis validez l'envoi.</p>
+    <div style="border:2px solid #dfe5ee; border-radius:12px 12px 32px 32px; padding:18px 20px; margin:14px 0; font-size:17px" id="docText">
+      ${segs.map((s,i)=>`<span class="seg" data-i="${i}" role="button" tabindex="0">${esc(s.t)}</span> `).join("")}
+    </div>
+    ${feedbackBox()}
+    <div class="btn-row">
+      <button class="btn" id="validate">Valider l'envoi du document</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  const sel = new Set();
+  panel.querySelectorAll(".seg").forEach(s=>{
+    const toggle = ()=>{
+      const i = +s.dataset.i;
+      if (sel.has(i)){ sel.delete(i); s.classList.remove("sel"); }
+      else { sel.add(i); s.classList.add("sel"); }
+    };
+    s.addEventListener("click", toggle);
+    s.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); }});
+  });
+  $("#backHall").addEventListener("click", closePanel);
+  $("#validate").addEventListener("click", ()=>{
+    const errs = segs.map((s,i)=>s.err?i:-1).filter(i=>i>=0);
+    const ok = errs.length===sel.size && errs.every(i=>sel.has(i));
+    if (ok){
+      showQuiz(r, {
+        question:"Vrai ou faux : « En cas d'erreur dans un contenu généré avec l'IA, c'est l'outil qui est responsable. »",
+        options:["Vrai","Faux"], answer:1,
+        explain:"C'est toujours la personne qui diffuse le contenu qui en reste responsable. L'IA propose, l'humain décide — et assume."
+      });
+    } else {
+      const missed = errs.filter(i=>!sel.has(i));
+      const wrong = [...sel].filter(i=>!errs.includes(i));
+      let msg = "Le document n'est pas prêt à partir. ";
+      if (wrong.length) msg += "Certains passages sélectionnés sont en réalité corrects. ";
+      if (missed.length) msg += `Il reste ${missed.length} erreur(s) à débusquer — cherchez une date, un chiffre et une citation. Astuce : ${segs[missed[0]].why}`;
+      setFb(false, msg);
+    }
+  });
+},
+
+/* ---- Salle 2 : tri de documents ---- */
+function(r){
+  const TOOLS = ["Copilot M365", "Outil externe autorisé", "Ne pas utiliser l'IA"];
+  const docs = [
+    {t:"Liste nominative d'apprenants", a:0, why:"Données personnelles : uniquement dans l'environnement sécurisé Copilot M365, dans le respect du RGPD."},
+    {t:"Rapport public d'activité", a:1, why:"Document déjà public : un outil externe autorisé peut le traiter sans risque."},
+    {t:"PV confidentiel de réunion de direction", a:2, why:"Contenu confidentiel et sensible : dans le doute, on n'utilise pas l'IA."},
+    {t:"CV entièrement anonymisé", a:1, why:"Anonymisé = plus de données personnelles : un outil externe autorisé convient."},
+    {t:"Budget interne du service", a:0, why:"Donnée interne non publique : l'environnement sécurisé Copilot M365 s'impose."},
+    {t:"Communiqué de presse déjà diffusé", a:1, why:"Public par définition : outil externe autorisé possible."}
+  ];
+  showPanel(`${roomHeader(r)}
+    <p><strong>Attribuez chaque document au bon outil.</strong> L'alarme RGPD se déclenche à la moindre erreur…</p>
+    <div id="docs">${docs.map((d,i)=>`
+      <div class="doc-card">
+        <div class="doc-title">${esc(d.t)}</div>
+        <div class="choice-row" data-i="${i}">
+          ${TOOLS.map((t,j)=>`<button data-j="${j}">${t}</button>`).join("")}
+        </div>
+      </div>`).join("")}
+    </div>
+    ${feedbackBox()}
+    <div class="btn-row">
+      <button class="btn" id="validate">Lancer le tri</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  const picks = new Array(docs.length).fill(-1);
+  panel.querySelectorAll(".choice-row").forEach(row=>{
+    row.querySelectorAll("button").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        row.querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel");
+        picks[+row.dataset.i] = +b.dataset.j;
+      });
+    });
+  });
+  $("#backHall").addEventListener("click", closePanel);
+  $("#validate").addEventListener("click", ()=>{
+    if (picks.includes(-1)){ setFb(false, "Tous les documents doivent être triés avant de lancer le tri."); return; }
+    const wrong = docs.map((d,i)=>picks[i]!==d.a?i:-1).filter(i=>i>=0);
+    if (!wrong.length){
+      showQuiz(r, {
+        question:"« Puis-je utiliser ChatGPT avec mon compte professionnel BF ? »",
+        options:["Oui, c'est un outil comme un autre","Non, sauf indication contraire"], answer:1,
+        explain:"Copilot M365 est l'outil recommandé dans l'environnement sécurisé BF. Les outils externes, c'est compte personnel et données publiques (ou anonymisées) uniquement."
+      });
+    } else {
+      const d = docs[wrong[0]];
+      setFb(false, `Alarme RGPD ! ${wrong.length} document(s) mal classé(s). Par exemple, « ${esc(d.t)} » : ${d.why}`);
+    }
+  });
+},
+
+/* ---- Salle 3 : associer situations et marquages ---- */
+function(r){
+  const M = [
+    {code:"IA-A", label:"Assistance — l'IA améliore un contenu existant"},
+    {code:"IA-C", label:"Co-construction — l'IA structure ou rédige une partie"},
+    {code:"IA-G", label:"Génération — l'IA produit l'essentiel du contenu"},
+    {code:"IA-D", label:"Décision/Analyse — l'IA analyse ou oriente une décision"}
+  ];
+  const situations = [
+    {t:"« J'ai demandé à Copilot de corriger l'orthographe de mon mail. »", a:0,
+     why:"L'IA a seulement amélioré un contenu existant (correction) : c'est de l'Assistance, IA-A."},
+    {t:"« L'IA a rédigé le plan et deux sections de mon support de formation. »", a:1,
+     why:"L'IA a structuré et rédigé une partie du contenu : Co-construction, IA-C."},
+    {t:"« L'illustration de mon article Magellan est entièrement générée. »", a:2,
+     why:"L'IA a produit l'essentiel du contenu : Génération, IA-G."},
+    {t:"« J'ai donné un tableau Excel à Copilot pour identifier des tendances. »", a:3,
+     why:"L'IA analyse et oriente une interprétation : Décision/Analyse, IA-D."}
+  ];
+  showPanel(`${roomHeader(r)}
+    <p><strong>Associez chaque situation au bon marquage.</strong> Rappel des 4 marquages :</p>
+    <ul class="rules-list">${M.map(m=>`<li><strong>${m.code}</strong> : ${m.label}</li>`).join("")}</ul>
+    <div id="docs">${situations.map((s,i)=>`
+      <div class="doc-card">
+        <div class="doc-title">${esc(s.t)}</div>
+        <div class="choice-row" data-i="${i}">
+          ${M.map((m,j)=>`<button data-j="${j}">${m.code}</button>`).join("")}
+        </div>
+      </div>`).join("")}
+    </div>
+    ${feedbackBox()}
+    <div class="btn-row">
+      <button class="btn" id="validate">Valider les marquages</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  const picks = new Array(situations.length).fill(-1);
+  panel.querySelectorAll(".choice-row").forEach(row=>{
+    row.querySelectorAll("button").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        row.querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel");
+        picks[+row.dataset.i] = +b.dataset.j;
+      });
+    });
+  });
+  $("#backHall").addEventListener("click", closePanel);
+  $("#validate").addEventListener("click", ()=>{
+    if (picks.includes(-1)){ setFb(false, "Chaque situation doit recevoir un marquage."); return; }
+    const wrong = situations.map((s,i)=>picks[i]!==s.a?i:-1).filter(i=>i>=0);
+    if (!wrong.length){
+      showQuiz(r, {
+        question:"Le signalement IA est-il requis pour une exploration interne ou une correction rapide ?",
+        options:["Oui, toujours","Non, pas dans ces cas-là"], answer:1,
+        explain:"Le marquage est obligatoire pour les contenus pédagogiques, les évaluations et les communications externes ou à diffusion large — pas pour l'exploration interne ni les corrections rapides."
+      });
+    } else {
+      const s = situations[wrong[0]];
+      setFb(false, `${wrong.length} marquage(s) à revoir. Indice : pour ${esc(s.t)} — ${s.why}`);
+    }
+  });
+},
+
+/* ---- Salle 4 : la jauge d'énergie ---- */
+function(r){
+  const usages = [
+    {t:"Synthétiser 30 pages d'évaluations de stage", good:true, why:"Gain de temps net sur une tâche volumineuse : usage pertinent."},
+    {t:"Faire écrire par l'IA un retour personnel à un apprenant en difficulté", good:false, why:"Les interactions humaines essentielles ne se délèguent pas à l'IA : ce retour doit venir de vous."},
+    {t:"Reformuler un mail délicat avant envoi", good:true, why:"L'IA améliore la qualité d'un contenu que vous maîtrisez : pertinent."},
+    {t:"Générer 50 PDF illustrés « parce qu'on peut »", good:false, why:"Aucun besoin réel + coût énergétique élevé : la sobriété d'abord."},
+    {t:"Comparer 3 scénarios d'organisation d'une formation", good:true, why:"Aide à structurer une tâche complexe : usage pertinent."},
+    {t:"Remplacer la réunion d'équipe par un résumé IA", good:false, why:"Une réunion d'équipe est une interaction humaine essentielle, pas une corvée à automatiser."}
+  ];
+  showPanel(`${roomHeader(r)}
+    <p><strong>Validez les 3 usages pertinents</strong> (cliquez pour sélectionner). Chaque mauvais choix validé fait grimper la jauge de surconsommation — à 100 %, tout est à refaire.</p>
+    <div class="gauge-wrap">
+      <div style="font-family:'Space Grotesk'; font-weight:700; margin-bottom:4px">Jauge de surconsommation <span id="gv">0 %</span></div>
+      <div class="gauge"><div id="gbar"></div></div>
+    </div>
+    <div id="usages">${usages.map((u,i)=>`<button class="obs-btn" data-i="${i}">${esc(u.t)}</button>`).join("")}</div>
+    ${feedbackBox()}
+    <div class="btn-row">
+      <button class="btn" id="validate">Valider ma sélection</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  const sel = new Set(); let gauge = 0;
+  panel.querySelectorAll(".obs-btn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const i = +b.dataset.i;
+      if (sel.has(i)){ sel.delete(i); b.classList.remove("sel"); }
+      else if (sel.size<3){ sel.add(i); b.classList.add("sel"); }
+      else setFb(false, "Trois usages maximum : désélectionnez-en un d'abord.");
+    });
+  });
+  $("#backHall").addEventListener("click", closePanel);
+  $("#validate").addEventListener("click", ()=>{
+    if (sel.size!==3){ setFb(false, "Sélectionnez exactement 3 usages."); return; }
+    const bad = [...sel].filter(i=>!usages[i].good);
+    if (!bad.length){
+      showQuiz(r, {
+        question:"« Tous les usages de l'IA nécessitent-ils un outil génératif ? »",
+        options:["Oui, c'est plus moderne","Non, pas si la réponse existe déjà"], answer:1,
+        explain:"Si la réponse existe déjà — sur Magellan, dans un document, auprès d'un collègue — pas besoin d'IA. C'est plus fiable, plus rapide et plus sobre."
+      });
+    } else {
+      gauge = Math.min(100, gauge + bad.length*25);
+      $("#gbar").style.width = gauge+"%"; $("#gv").textContent = gauge+" %";
+      const u = usages[bad[0]];
+      setFb(false, `La jauge grimpe ! « ${esc(u.t)} » n'est pas un bon usage : ${u.why}`);
+      if (gauge>=100){
+        gauge = 0; sel.clear();
+        panel.querySelectorAll(".obs-btn").forEach(x=>x.classList.remove("sel"));
+        setTimeout(()=>{ $("#gbar").style.width="0%"; $("#gv").textContent="0 %";
+          setFb(false, "Surconsommation maximale atteinte… NOVA réinitialise la salle. Repartez sur une sélection plus sobre !"); }, 600);
+      }
+    }
+  });
+},
+
+/* ---- Salle 5 : l'œil critique ---- */
+function(r){
+  const obs = [
+    {t:"Tous les personnages de l'image se ressemblent : même âge, même morphologie, même couleur de peau.", pb:true,
+     why:"Biais et stéréotypes : une brochure BF doit refléter la diversité réelle des publics bruxellois."},
+    {t:"L'image affiche « 9 personnes sur 10 réussissent grâce à l'IA » sans aucune source.", pb:true,
+     why:"Une statistique sans source ne se diffuse pas — on cite ou on retire."},
+    {t:"Le style imite de façon reconnaissable celui d'un illustrateur célèbre.", pb:true,
+     why:"Propriété intellectuelle : imiter le style identifiable d'un artiste pose un problème de droits et d'éthique."},
+    {t:"Les couleurs reprennent le bleu de Bruxelles Formation.", pb:false},
+    {t:"L'image montre une salle de formation avec des ordinateurs.", pb:false},
+    {t:"Le format est adapté à une brochure imprimée.", pb:false}
+  ];
+  showPanel(`${roomHeader(r)}
+    <p><strong>Repérez les 3 problèmes</strong> de cette image générée par IA, proposée pour la brochure BF :</p>
+    <div class="fake-image" aria-label="Description de l'image générée">
+      Image générée — « Apprenants du futur » : un groupe de personnes souriantes dans une salle de formation
+      lumineuse aux couleurs BF, un bandeau « 9 personnes sur 10 réussissent grâce à l'IA »,
+      le tout dans un style d'illustration très caractéristique d'un artiste connu.
+    </div>
+    <div>${obs.map((o,i)=>`<button class="obs-btn" data-i="${i}">${esc(o.t)}</button>`).join("")}</div>
+    ${feedbackBox()}
+    <div class="btn-row">
+      <button class="btn" id="validate">Signaler les problèmes</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  const sel = new Set();
+  panel.querySelectorAll(".obs-btn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const i = +b.dataset.i;
+      if (sel.has(i)){ sel.delete(i); b.classList.remove("sel"); }
+      else { sel.add(i); b.classList.add("sel"); }
+    });
+  });
+  $("#backHall").addEventListener("click", closePanel);
+  $("#validate").addEventListener("click", ()=>{
+    const pbs = obs.map((o,i)=>o.pb?i:-1).filter(i=>i>=0);
+    const ok = sel.size===pbs.length && pbs.every(i=>sel.has(i));
+    if (ok){
+      showQuiz(r, {
+        question:"Vrai ou faux : « Une image générée par IA peut être diffusée sans vérification si elle est jolie. »",
+        options:["Vrai","Faux"], answer:1,
+        explain:"Avant diffusion : vérifier les biais et stéréotypes, les droits, l'accessibilité — et apposer le marquage IA-G."
+      });
+    } else {
+      const missed = pbs.filter(i=>!sel.has(i));
+      let msg = "L'œil critique de NOVA n'est pas convaincu. ";
+      if ([...sel].some(i=>!pbs.includes(i))) msg += "Certains éléments signalés ne posent aucun problème. ";
+      if (missed.length) msg += `Indice : ${obs[missed[0]].why}`;
+      setFb(false, msg);
+    }
+  });
+}
+];
+
+/* =====================================================================
+   FINAL — keypad & victoire
+   ===================================================================== */
+let entered = "";
+function openKeypad(){
+  if (state.won){ showVictory(); return; }
+  if (solvedCount()<5){
+    showPanel(`<span class="kicker">Porte de sortie</span>
+      <h2>Code de sortie requis</h2>
+      <div class="narration">« Cette porte n'acceptera le code qu'une fois les 5 salles déverrouillées.
+      Il vous en reste ${5-solvedCount()} — chaque salle livre un fragment. »</div>
+      <div class="btn-row"><button class="btn" id="backHall">Retour au hall</button></div>`);
+    $("#backHall").addEventListener("click", closePanel);
+    return;
+  }
+  entered = "";
+  showPanel(`<span class="kicker">Porte de sortie</span>
+    <h2>Composez le code final</h2>
+    <p>Assemblez les 4 fragments récoltés, dans le bon ordre, sur le clavier mural.</p>
+    <div id="codeDisplay" aria-live="polite">— — — —</div>
+    <div id="keypadGrid">
+      ${["A","C","G","D"].map(k=>`<button data-k="${k}">${k}</button>`).join("")}
+    </div>
+    ${feedbackBox()}
+    <div class="btn-row">
+      <button class="btn secondary" id="kpClear">Effacer</button>
+      <button class="btn secondary" id="backHall">Retour au hall</button>
+    </div>`);
+  const disp = $("#codeDisplay");
+  const refresh = ()=>{ disp.textContent = (entered + "————".slice(entered.length)).split("").join(" "); };
+  refresh();
+  panel.querySelectorAll("#keypadGrid button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if (entered.length>=4) return;
+      entered += b.dataset.k; refresh();
+      if (entered.length===4){
+        if (entered===FINAL_CODE){
+          setFb(true, "<strong>Code accepté.</strong> La porte s'ouvre…");
+          state.won = true; save(); markExitOpen();
+          setTimeout(showVictory, 900);
+        } else {
+          setFb(false, "Code refusé. Souvenez-vous des 4 marquages dans l'ordre de la charte : Assistance, Co-construction, Génération, Décision.");
+          entered = ""; setTimeout(refresh, 700);
+        }
+      }
+    });
+  });
+  $("#kpClear").addEventListener("click", ()=>{ entered=""; refresh(); });
+  $("#backHall").addEventListener("click", closePanel);
+}
+
+function showVictory(){
+  const date = new Date().toLocaleDateString("fr-BE", {day:"numeric", month:"long", year:"numeric"});
+  const time = state.timerOn
+    ? `<br>Temps de mission : <strong>${String(Math.floor(state.elapsed/60)).padStart(2,"0")}:${String(Math.floor(state.elapsed%60)).padStart(2,"0")}</strong>` : "";
+  showPanel(`<span class="kicker" style="background:var(--vert)">Mission accomplie</span>
+    <h2>Vous êtes libre — et formé·e !</h2>
+    <div class="narration">« Félicitations. Les 5 engagements n'ont plus de secret pour vous.
+    Voici votre Permis IA BF — faites-en bon usage, l'IA propose… mais c'est vous qui décidez. »</div>
+    <div id="permis">
+      <span class="kicker">Bruxelles Formation</span>
+      <h3>Permis IA BF</h3>
+      <div class="holder">Délivré à ${esc(state.name || "vous")}</div>
+      <p>pour avoir déverrouillé les 5 engagements de la Charte IA :</p>
+      <ul>
+        ${ROOMS.map(r=>`<li style="--c:${r.accent}">« ${esc(r.slogan)} »</li>`).join("")}
+      </ul>
+      <p class="meta">Fait au Bureau du futur, le ${date}.${time}</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="replay">Rejouer</button>
+      <a class="btn secondary" href="${CHARTE_URL}" target="_blank" rel="noopener" style="text-decoration:none">Lire la charte complète</a>
+    </div>`);
+  $("#replay").addEventListener("click", ()=>{
+    localStorage.removeItem(SAVE_KEY); location.reload();
+  });
+}
+
+/* =====================================================================
+   START
+   ===================================================================== */
+load();
+if (state.started){
+  $("#btnContinue").hidden = false;
+  if (state.name) $("#playerName").value = state.name;
+  $("#chkTimer").checked = state.timerOn;
+}
+function begin(fresh){
+  if (fresh){
+    const prev = $("#playerName").value.trim();
+    state = { name:prev, timerOn:$("#chkTimer").checked, started:true,
+              solved:[false,false,false,false,false], elapsed:0, won:false };
+  } else {
+    state.name = $("#playerName").value.trim() || state.name;
+  }
+  if (!state.name){ $("#playerName").focus(); $("#playerName").placeholder = "Votre prénom est requis pour le Permis IA BF"; return; }
+  state.started = true; save();
+  $("#intro").hidden = true;
+  $("#hud").hidden = false;
+  $("#timer").style.display = state.timerOn ? "inline-block" : "none";
+  refreshProgress();
+  state.solved.forEach((s,i)=>{ if(s) markDoorUnlocked(i); });
+  if (state.won) markExitOpen();
+  canvas.focus();
+  setHint("Bienvenue dans le Bureau du futur. Approchez-vous d'une porte (ZQSD/flèches) ou cliquez dessus.", 7000);
+}
+$("#btnStart").addEventListener("click", ()=>begin(true));
+$("#btnContinue").addEventListener("click", ()=>begin(false));
+addEventListener("keydown", e=>{
+  if (e.key==="Escape" && !$("#roomOverlay").hidden){
+    // allow closing non-blocking panels with Escape (not the quiz mid-validation)
+    const back = panel.querySelector("#backHall"); if (back) back.click();
+  }
+});
+</script>
+</body>
+</html>
