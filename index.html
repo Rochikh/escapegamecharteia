@@ -217,6 +217,7 @@
   <span class="spacer"></span>
   <button class="badge" id="btnRooms">Salles</button>
   <button class="badge" id="btnLook" title="Activer la visée à la souris (clic pour interagir, Échap pour sortir)">Mode immersif</button>
+  <button class="badge" id="btnSound" aria-pressed="true">Son : oui</button>
   <button class="badge" id="btnReset">Recommencer</button>
 </header>
 <div id="hint" hidden></div>
@@ -360,7 +361,7 @@ const CHARTE_URL = "https://rochikh.github.io/charte-ia-bf/";
 
 /* ---------------- state ---------------- */
 const SAVE_KEY = "missionIA-BF-v1";
-let state = { name:"", timerOn:false, started:false, solved:[false,false,false,false,false], elapsed:0, won:false };
+let state = { name:"", timerOn:false, started:false, solved:[false,false,false,false,false], elapsed:0, won:false, mute:false };
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
 function load(){
   try{
@@ -702,7 +703,7 @@ function showPanel(html){
   panel.scrollTop = 0;
   const f = panel.querySelector("button, input"); if (f) f.focus();
 }
-function closePanel(){ $("#roomOverlay").hidden = true; canvas.focus(); }
+function closePanel(){ $("#roomOverlay").hidden = true; canvas.focus(); AUDIO.setMood(null); }
 
 function roomHeader(r){
   return `<span class="kicker" style="background:${r.accent}; color:${r.id===0?'#5d4f06':'#fff'}">Salle ${r.id+1} · Engagement ${r.id+1}</span>
@@ -711,6 +712,7 @@ function roomHeader(r){
 
 function openRoom(i){
   const r = ROOMS[i];
+  AUDIO.setMood(i);
   if (state.solved[i]){ showUnlock(r, true); return; }
   showPanel(`${roomHeader(r)}
     <div class="narration">${esc(r.intro)}</div>
@@ -725,6 +727,7 @@ function openRoom(i){
 function feedbackBox(){ return `<div class="feedback" id="fb" role="alert"></div>`; }
 function setFb(ok, msg){
   const fb = $("#fb"); fb.className = "feedback " + (ok?"good":"bad"); fb.innerHTML = msg;
+  AUDIO.fb(ok);
 }
 
 /* ---- quiz step shared by all rooms ---- */
@@ -755,6 +758,7 @@ function showQuiz(r, q){
 
 function unlockRoom(r){
   state.solved[r.id] = true; save(); refreshProgress(); markDoorUnlocked(r.id);
+  AUDIO.unlock();
   showUnlock(r, false);
 }
 function showUnlock(r, revisit){
@@ -1094,11 +1098,12 @@ function openKeypad(){
   panel.querySelectorAll("#keypadGrid button").forEach(b=>{
     b.addEventListener("click", ()=>{
       if (entered.length>=4) return;
+      AUDIO.key();
       entered += b.dataset.k; refresh();
       if (entered.length===4){
         if (entered===FINAL_CODE){
           setFb(true, "<strong>Code accepté.</strong> La porte s'ouvre…");
-          state.won = true; save(); markExitOpen();
+          state.won = true; save(); markExitOpen(); AUDIO.win();
           setTimeout(showVictory, 900);
         } else {
           setFb(false, "Code refusé. Souvenez-vous des 4 marquages dans l'ordre de la charte : Assistance, Co-construction, Génération, Décision.");
@@ -1139,6 +1144,88 @@ function showVictory(){
 }
 
 /* =====================================================================
+   AUDIO — musique d'ambiance et effets, 100 % synthétisés (Web Audio),
+   aucun fichier externe pour rester en HTML autonome.
+   ===================================================================== */
+const AUDIO = (() => {
+  let ctx = null, master = null, loop = null, step = 0;
+  let mood = -1;                      // -1 = hall, 0..4 = salle
+  // racine de la nappe par lieu (hall grave et calme, salles légèrement typées)
+  const ROOTS = { "-1":110, 0:123.47, 1:98, 2:130.81, 3:110, 4:103.83 };
+  const PENTA = [1, 9/8, 5/4, 3/2, 5/3];   // gamme pentatonique majeure
+
+  function ensure(){
+    if (!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = state.mute ? 0 : 1;
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return true;
+  }
+  function tone(freq, t0, dur, {type="triangle", vol=0.1, glideTo=null} = {}){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t0+dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + Math.min(0.08, dur/4));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  /* nappe : un accord doux toutes les ~3,2 s + une note pentatonique scintillante */
+  function bar(){
+    if (!ctx) return;
+    const t = ctx.currentTime + 0.05;
+    const root = ROOTS[mood] || 110;
+    const chord = step % 4 === 2 ? [1, 6/5, 3/2] : [1, 5/4, 3/2];  // mineur de passage
+    chord.forEach((iv, i) => tone(root*iv, t, 3.4, {type:"sine", vol:0.045 - i*0.008}));
+    tone(root/2, t, 3.4, {type:"sine", vol:0.05});                 // basse
+    if (step % 2 === 0){
+      const n = PENTA[Math.floor(Math.random()*PENTA.length)];
+      tone(root*4*n, t + 0.9 + Math.random(), 1.2, {type:"triangle", vol:0.025});
+    }
+    step++;
+  }
+  return {
+    start(){ if (!ensure()) return; if (!loop){ bar(); loop = setInterval(bar, 3200); } },
+    setMood(m){ mood = (m === null || m === undefined) ? -1 : m; },
+    toggleMute(){
+      state.mute = !state.mute; save();
+      if (master) master.gain.value = state.mute ? 0 : 1;
+      return state.mute;
+    },
+    fb(ok){
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      if (ok){ tone(523.25, t, 0.16, {vol:0.12}); tone(659.25, t+0.13, 0.3, {vol:0.12}); }
+      else { tone(220, t, 0.18, {type:"square", vol:0.05, glideTo:165}); tone(165, t+0.16, 0.25, {type:"square", vol:0.045}); }
+    },
+    unlock(){
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [392, 493.88, 587.33, 783.99].forEach((f,i)=> tone(f, t + i*0.13, 0.45, {vol:0.11}));
+    },
+    key(){ if (ctx) tone(660, ctx.currentTime, 0.09, {type:"square", vol:0.04}); },
+    win(){
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.5].forEach((f,i)=> tone(f, t + i*0.15, 0.5, {vol:0.12}));
+      [261.63, 329.63, 392, 523.25].forEach(f => tone(f, t + 0.65, 2.2, {type:"sine", vol:0.05}));
+    }
+  };
+})();
+
+$("#btnSound").addEventListener("click", ()=>{
+  const muted = AUDIO.toggleMute();
+  $("#btnSound").textContent = muted ? "Son : non" : "Son : oui";
+  $("#btnSound").setAttribute("aria-pressed", String(!muted));
+});
+
+/* =====================================================================
    START
    ===================================================================== */
 load();
@@ -1151,12 +1238,15 @@ function begin(fresh){
   if (fresh){
     const prev = $("#playerName").value.trim();
     state = { name:prev, timerOn:$("#chkTimer").checked, started:true,
-              solved:[false,false,false,false,false], elapsed:0, won:false };
+              solved:[false,false,false,false,false], elapsed:0, won:false, mute:state.mute };
   } else {
     state.name = $("#playerName").value.trim() || state.name;
   }
   if (!state.name){ $("#playerName").focus(); $("#playerName").placeholder = "Votre prénom est requis pour le Permis IA BF"; return; }
   state.started = true; save();
+  AUDIO.start();
+  $("#btnSound").textContent = state.mute ? "Son : non" : "Son : oui";
+  $("#btnSound").setAttribute("aria-pressed", String(!state.mute));
   $("#intro").hidden = true;
   $("#hud").hidden = false;
   $("#timer").style.display = state.timerOn ? "inline-block" : "none";
