@@ -1182,16 +1182,24 @@ const AUDIO = (() => {
     const t = ctx.currentTime + 0.05;
     const root = ROOTS[mood] || 110;
     const chord = step % 4 === 2 ? [1, 6/5, 3/2] : [1, 5/4, 3/2];  // mineur de passage
-    chord.forEach((iv, i) => tone(root*iv, t, 3.4, {type:"sine", vol:0.045 - i*0.008}));
-    tone(root/2, t, 3.4, {type:"sine", vol:0.05});                 // basse
+    chord.forEach((iv, i) => tone(root*iv, t, 3.4, {type:"sine", vol:0.11 - i*0.02}));
+    tone(root/2, t, 3.4, {type:"sine", vol:0.12});                 // basse
     if (step % 2 === 0){
       const n = PENTA[Math.floor(Math.random()*PENTA.length)];
-      tone(root*4*n, t + 0.9 + Math.random(), 1.2, {type:"triangle", vol:0.025});
+      tone(root*4*n, t + 0.9 + Math.random(), 1.2, {type:"triangle", vol:0.06});
     }
     step++;
   }
   return {
-    start(){ if (!ensure()) return; if (!loop){ bar(); loop = setInterval(bar, 3200); } },
+    start(){
+      if (!ensure()) return;
+      if (!loop){
+        // carillon de bienvenue : confirme immédiatement que le son fonctionne
+        const t = ctx.currentTime + 0.05;
+        [523.25, 659.25, 783.99].forEach((f,i)=> tone(f, t + i*0.12, 0.5, {vol:0.14}));
+        bar(); loop = setInterval(bar, 3200);
+      }
+    },
     setMood(m){ mood = (m === null || m === undefined) ? -1 : m; },
     toggleMute(){
       state.mute = !state.mute; save();
