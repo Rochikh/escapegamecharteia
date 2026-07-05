@@ -744,7 +744,7 @@ let dragMoved = 0;
 canvas.addEventListener("mousedown", e=>{ dragMoved=0; });
 canvas.addEventListener("mousemove", ()=>{ if(dragging) dragMoved++; });
 canvas.addEventListener("click", e=>{
-  if (overlayOpen() || dragMoved>4) return;
+  if (overlayOpen() || dragMoved>4 || cinema) return;
   if (pointerLocked) mouseV.set(0,0);
   else mouseV.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
   raycaster.setFromCamera(mouseV, camera);
@@ -786,7 +786,7 @@ function nearestDoor(){
   }
   return best;
 }
-function tryInteract(){ const d = nearestDoor(); if (d) activateDoor(d); }
+function tryInteract(){ if (cinema) return; const d = nearestDoor(); if (d) activateDoor(d); }
 
 /* marche automatique : cliquer une porte lointaine y conduit le joueur */
 let walk = null;
@@ -1451,7 +1451,7 @@ function showSas(){
     if (wrong < 0){
       state.reviewed = true; save();
       setFb(true, "<strong>Sas ouvert.</strong> Les 5 engagements sont bien en place — au clavier, maintenant.");
-      setTimeout(openKeypad, 900);
+      setTimeout(()=>{ if (!$("#roomOverlay").hidden) openKeypad(); }, 900);
     } else {
       setFb(false, `Le slogan placé en n° ${wrong+1} n'est pas celui de la salle ${wrong+1} (« ${esc(ROOMS[wrong].name)} »). Repensez à votre parcours.`);
     }
