@@ -764,8 +764,9 @@ canvas.addEventListener("mousemove", e=>{
   raycaster.setFromCamera(mouseV, camera);
   const hit = raycaster.intersectObjects(doorMeshes)[0];
   const data = hit ? hit.object.userData : null;
-  if (hovered && hovered !== data && doorLocked(hovered)){
-    hovered.panel.material.emissiveIntensity = 0;
+  if (hovered && hovered !== data){
+    // retour à l'intensité de repos : 0 si verrouillée, 0.35 si déverrouillée
+    hovered.panel.material.emissiveIntensity = doorLocked(hovered) ? 0 : 0.35;
   }
   hovered = data;
   canvas.style.cursor = data ? "pointer" : "";
@@ -809,7 +810,7 @@ function tick(){
   const dt = Math.min(clock.getDelta(), 0.05);
 
   tGlob += dt;
-  if (state.started && !overlayOpen() && (!state.won || cinema)){
+  if (state.started && !overlayOpen()){   // le hall reste vivant même après la victoire
     if (walk){
       const dx = walk.x-player.x, dz = walk.z-player.z;
       const d = Math.hypot(dx, dz);
@@ -969,9 +970,10 @@ $("#btnReset").addEventListener("click", ()=>{
    ROOMS — narration, puzzles, quiz, unlock
    ===================================================================== */
 const panel = $("#roomPanel");
-let typeTimer = null;
+let typeTimer = null, sasTimer = null;
 function showPanel(html){
   clearInterval(typeTimer);
+  walk = null;                 // ouvrir un panneau annule toute marche automatique en attente
   panel.innerHTML = html;
   $("#roomOverlay").hidden = false;
   panel.scrollTop = 0;
@@ -995,14 +997,18 @@ function showPanel(html){
 }
 function closePanel(){
   $("#roomOverlay").hidden = true; canvas.focus(); AUDIO.setMood(null); setTint(null);
+  clearTimeout(sasTimer); sasTimer = null;
   if (pendingUnlock !== null){
     const id = pendingUnlock; pendingUnlock = null;
-    const mesh = doorMeshes.find(m => m.userData.roomId===id && m.geometry.type==="ExtrudeGeometry");
-    if (mesh){
-      const p = new THREE.Vector3(); mesh.userData.group.getWorldPosition(p);
-      yawT = Math.atan2(-(p.x-player.x), -(p.z-player.z));   // le regard se tourne vers la porte
+    if (reduceMotion){ markDoorUnlocked(id, false); }
+    else {
+      const mesh = doorMeshes.find(m => m.userData.roomId===id && m.geometry.type==="ExtrudeGeometry");
+      if (mesh){
+        const p = new THREE.Vector3(); mesh.userData.group.getWorldPosition(p);
+        yawT = Math.atan2(-(p.x-player.x), -(p.z-player.z));   // le regard se tourne vers la porte
+      }
+      setTimeout(()=>{ markDoorUnlocked(id, true); AUDIO.whoosh(); }, 350);
     }
-    setTimeout(()=>{ markDoorUnlocked(id, true); AUDIO.whoosh(); }, 350);
   }
 }
 
@@ -1059,7 +1065,7 @@ function openRoom(i){
 function feedbackBox(){ return `<div class="feedback" id="fb" role="alert"></div>`; }
 function setFb(ok, msg, countError = true){
   const fb = $("#fb"); fb.className = "feedback " + (ok?"good":"bad"); fb.innerHTML = msg;
-  if (!ok && countError) state.errors = (state.errors||0) + 1;   // les rappels de formulaire ne comptent pas
+  if (!ok && countError){ state.errors = (state.errors||0) + 1; save(); }   // les rappels de formulaire ne comptent pas
   AUDIO.fb(ok);
 }
 
@@ -1450,8 +1456,9 @@ function showSas(){
     const wrong = order.findIndex((v,pos)=>v!==pos);
     if (wrong < 0){
       state.reviewed = true; save();
+      $("#validate").disabled = true;
       setFb(true, "<strong>Sas ouvert.</strong> Les 5 engagements sont bien en place — au clavier, maintenant.");
-      setTimeout(()=>{ if (!$("#roomOverlay").hidden) openKeypad(); }, 900);
+      sasTimer = setTimeout(()=>{ sasTimer = null; if (!$("#roomOverlay").hidden) openKeypad(); }, 900);
     } else {
       setFb(false, `Le slogan placé en n° ${wrong+1} n'est pas celui de la salle ${wrong+1} (« ${esc(ROOMS[wrong].name)} »). Repensez à votre parcours.`);
     }
@@ -1460,6 +1467,9 @@ function showSas(){
 
 let entered = "";
 function openKeypad(){
+  /* on quitte le contexte « salle » : ambiance neutre, porte en attente consommée */
+  AUDIO.setMood(null); setTint(null);
+  if (pendingUnlock !== null){ markDoorUnlocked(pendingUnlock, false); pendingUnlock = null; }
   if (state.won){ showVictory(); return; }
   if (solvedCount()===5 && !state.reviewed){ showSas(); return; }
   if (solvedCount()<5){
@@ -1490,7 +1500,7 @@ function openKeypad(){
   refresh();
   panel.querySelectorAll("#keypadGrid button").forEach(b=>{
     b.addEventListener("click", ()=>{
-      if (entered.length>=4) return;
+      if (entered.length>=4 || state.won) return;
       AUDIO.key();
       entered += b.dataset.k; refresh();
       if (entered.length===4){
@@ -1522,7 +1532,7 @@ function openKeypad(){
       }
     });
   });
-  $("#kpClear").addEventListener("click", ()=>{ entered=""; refresh(); });
+  $("#kpClear").addEventListener("click", ()=>{ if (state.won) return; entered=""; refresh(); });
   $("#kpRecap").addEventListener("click", ()=>{ closePanel(); $("#btnRooms").click(); });
   $("#backHall").addEventListener("click", closePanel);
 }
@@ -1770,6 +1780,7 @@ function begin(fresh){
   }
   $("#nameErr").hidden = true;
   state.started = true; save();
+  lastTimerSave = 0; walk = null; cinema = false; pendingUnlock = null;
   AUDIO.start();
   $("#btnSound").textContent = state.mute ? "Son : non" : "Son : oui";
   $("#btnSound").setAttribute("aria-pressed", String(!state.mute));
@@ -1793,8 +1804,11 @@ function begin(fresh){
   setHint("Bienvenue dans le Bureau du futur. Approchez-vous d'une porte (ZQSD/flèches) ou cliquez dessus.", 7000);
 }
 $("#btnStart").addEventListener("click", ()=>{
-  if (state.started && solvedCount() > 0 && !state.won){
-    askConfirm(`Repartir de zéro ? Votre partie en cours (${solvedCount()} salle(s) déverrouillée(s)) sera effacée.`, ()=>begin(true));
+  if (state.started && (solvedCount() > 0 || state.won)){
+    const msg = state.won
+      ? "Repartir de zéro ? Votre Permis IA BF actuel sera effacé — pensez à le télécharger d'abord."
+      : `Repartir de zéro ? Votre partie en cours (${solvedCount()} salle(s) déverrouillée(s)) sera effacée.`;
+    askConfirm(msg, ()=>begin(true));
   } else begin(true);
 });
 $("#btnContinue").addEventListener("click", ()=>begin(false));
@@ -1803,7 +1817,8 @@ addEventListener("keydown", e=>{
   if (!$("#confirmDlg").hidden){ $("#confirmNo").click(); return; }
   if (!$("#roomsMenu").hidden){ $("#roomsMenu").hidden = true; $("#btnRooms").focus(); return; }
   if (!$("#roomOverlay").hidden){
-    const back = panel.querySelector("#backHall"); if (back) back.click();
+    const back = panel.querySelector("#backHall");
+    if (back) back.click(); else closePanel();   // écran de victoire : Échap ramène au hall
   }
 });
 </script>
