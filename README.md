@@ -6,15 +6,20 @@ un code final **A · C · G · D** (les 4 marquages IA) et un **Permis IA BF** p
 
 ## Jouer
 
-Ouvrez simplement `index.html` dans un navigateur — un seul fichier, aucune installation.
-Une connexion internet est nécessaire au premier chargement (moteur 3D Three.js et police
-Space Grotesk chargés depuis des CDN épinglés).
+Ouvrez simplement `index.html` dans un navigateur — un seul fichier, aucune installation,
+**aucune connexion internet nécessaire** : le moteur 3D (Three.js), la police Space Grotesk
+et les sons (synthétisés) sont embarqués dans le fichier. Il se partage donc aussi en pièce
+jointe Teams/mail.
 
-- **Déplacement** : ZQSD / WASD ou flèches · regard à la souris (glisser, ou « Mode immersif »)
-- **Interagir** : cliquer sur une porte, ou s'en approcher et presser `E`
+- **Avancer / reculer** : `Z`/`S` (ou `W`/`S`, flèches haut/bas) · **pas de côté** : `Q`/`D` (ou `A`/`D`)
+- **Tourner** : flèches gauche/droite, souris (glisser), ou « Mode immersif »
+- **Interagir** : cliquer sur une porte (le joueur s'y rend tout seul), ou presser `E` à proximité
 - **Sans clavier / non-joueurs** : le bouton **Salles** ouvre chaque salle d'un clic
-- La progression est sauvegardée automatiquement (localStorage) ; chronomètre optionnel
-  pour les compétitions entre équipes.
+- Progression sauvegardée automatiquement (localStorage), énigmes mélangées à chaque partie
+- **Mode compétition** : chronomètre optionnel (actif aussi pendant les énigmes), score,
+  niveaux Or/Argent/Bronze, bouton « Copier mon résultat » pour le chat Teams
+- **À la fin** : Permis IA BF nominatif téléchargeable en image ou imprimable
+- Accessible : navigation clavier complète, lecteurs d'écran, `prefers-reduced-motion` respecté
 
 ## Les 5 salles = les 5 engagements
 
