@@ -286,7 +286,7 @@
   <span class="badge">Mission IA <span style="color:#8aa0c4">· BF</span></span>
   <div id="progress" aria-label="Progression : salles déverrouillées" role="img"></div>
   <span class="badge" id="timer" aria-label="Chronomètre">00:00</span>
-  <span class="badge" id="fragments" aria-label="Fragments du code de sortie récoltés">Code<b data-f="A">·</b><b data-f="C">·</b><b data-f="G">·</b><b data-f="D">·</b></span>
+  <span class="badge" id="fragments" aria-label="Fragments du code de sortie récoltés">Code<b data-f="A">·</b><b data-f="C">·</b><b data-f="G">·</b><b data-f="O">·</b></span>
   <span class="spacer"></span>
   <button class="badge" id="btnRooms">Salles</button>
   <button class="badge" id="btnLook" title="Activer la visée à la souris (clic pour interagir, Échap pour sortir)">Mode immersif</button>
@@ -330,8 +330,8 @@
       Pas joueur ? Le bouton <strong>Salles</strong> ouvre chaque salle d'un clic.
     </p>
     <p class="help-keys">
-      v2.2 · Durée : environ 15 minutes · Jouable seul ou en équipes (mode chrono) ·
-      <a href="https://rochikh.github.io/charte-ia-bf/" target="_blank" rel="noopener">Lire la charte IA BF</a>
+      v3.0 · Charte V3 (2026) · Durée : environ 15 minutes · Jouable seul ou en équipes (mode chrono) ·
+      <a href="https://chartebf.rochane.fr/" target="_blank" rel="noopener">Lire la charte IA BF</a>
     </p>
     <div class="btn-row">
       <button class="btn" id="btnStart">Commencer la mission</button>
@@ -397,6 +397,7 @@ const COLORS = {
   turquoise:0x47b7a4, orange:0xf5810c, mauve:0x524797
 };
 
+/* Contenu aligné sur la Charte IA BF — Version 3 (2026) */
 const ROOMS = [
   {
     id:0, name:"Responsabilité et esprit critique", accent:"#edcb0c", hex:COLORS.jaune,
@@ -406,67 +407,67 @@ const ROOMS = [
     unlockLine:"Trois hallucinations débusquées. Même moi, je n'avais pas vu la citation d'Einstein… si, bien sûr que si.",
     rules:[
       "Vérifier les faits et les sources de tout contenu généré.",
-      "Adapter le contenu au contexte avant de le diffuser.",
+      "Adapter le contenu au contexte BF avant de le diffuser.",
       "Assumer le contenu final : pas d'excuse « c'est l'IA »."
     ],
     intro:"« Salle 1 : Responsabilité. Sur l'écran, un document généré par IA est prêt à partir vers 300 destinataires. Mon capteur d'esprit critique détecte 3 erreurs factuelles glissées dans le texte. Trouvez-les avant de valider l'envoi. »"
   },
   {
-    id:1, name:"Protection des données", accent:"#47b7a4", hex:COLORS.turquoise,
+    id:1, name:"Usage responsable et proportionné", accent:"#4eae33", hex:COLORS.vert,
+    ink:"#123c0b",
+    slogan:"L'IA est une option, pas la solution.",
+    fragment:"C",
+    unlockLine:"Jauge au vert. Vous savez quand me solliciter… et quand un collègue ou un café font mieux l'affaire.",
+    rules:[
+      "Utiliser l'IA quand elle fait gagner du temps ou améliore la qualité.",
+      "Jamais à la place des échanges humains essentiels.",
+      "Choisir de ne pas l'utiliser est un choix légitime."
+    ],
+    intro:"« Salle 2 : Proportion. Voici 6 usages envisagés par l'équipe. Validez les 3 usages pertinents et écartez les 3 absurdes. Attention : chaque mauvais choix fait grimper la jauge de surconsommation. »"
+  },
+  {
+    id:2, name:"Protection des données et des informations", accent:"#47b7a4", hex:COLORS.turquoise,
     ink:"#0b3d34",
     slogan:"Interne sécurisé ≠ externe public.",
-    fragment:"C",
+    fragment:"G",
     unlockLine:"Tri impeccable. L'alarme RGPD peut se rendormir — vos données sont entre de bonnes mains : les vôtres.",
     rules:[
       "Outils sécurisés (Copilot M365) : OK, dans le respect du RGPD.",
       "Outils externes : uniquement données publiques ou anonymisées.",
       "Dans le doute, on n'utilise pas."
     ],
-    intro:"« Salle 2 : Données. Six documents traînent sur le bureau. Triez chacun vers le bon outil : Copilot M365, un outil externe autorisé… ou pas d'IA du tout. Une seule erreur et l'alarme RGPD se déclenche. »"
+    intro:"« Salle 3 : Données. Six documents traînent sur le bureau. Triez chacun vers le bon outil : Copilot M365, un outil externe autorisé… ou pas d'IA du tout. Une seule erreur et l'alarme RGPD se déclenche. »"
   },
   {
-    id:2, name:"Transparence des usages", accent:"#f5810c", hex:COLORS.orange,
+    id:3, name:"Transparence des usages", accent:"#f5810c", hex:COLORS.orange,
     ink:"#5c2e00",
     slogan:"Si l'IA a vraiment contribué, ça se dit.",
-    fragment:"G",
+    fragment:"O",
     unlockLine:"Quatre marquages, quatre lettres. Retenez-les bien : elles pourraient vous ouvrir des portes. C'est même certain.",
     rules:[
       "Signalement obligatoire : contenus pédagogiques, évaluations, communications externes ou à diffusion large.",
-      "4 marquages : IA-A, IA-C, IA-G, IA-D.",
+      "4 marquages : IA-A, IA-C, IA-G, IA-O.",
       "Pas requis pour l'exploration interne ou les corrections rapides."
     ],
-    intro:"« Salle 3 : Transparence. Quatre collègues décrivent leur usage de l'IA. Associez chaque situation au bon marquage — ces quatre lettres forment le code de sortie, ouvrez l'œil. »"
+    intro:"« Salle 4 : Transparence. Quatre collègues décrivent leur usage de l'IA. Associez chaque situation au bon marquage — ces quatre lettres forment le code de sortie, ouvrez l'œil. »"
   },
   {
-    id:3, name:"Usage responsable et proportionné", accent:"#4eae33", hex:COLORS.vert,
-    ink:"#123c0b",
-    slogan:"Tout faire avec l'IA est aussi absurde que ne rien faire avec.",
-    fragment:"D",
-    unlockLine:"Jauge au vert. Vous savez quand me solliciter… et quand un collègue ou un café font mieux l'affaire.",
-    rules:[
-      "Utiliser l'IA quand elle fait gagner du temps, améliore la qualité ou aide sur une tâche complexe.",
-      "Jamais à la place des interactions humaines essentielles.",
-      "Penser sobriété : une vidéo générée coûte bien plus qu'un texte."
-    ],
-    intro:"« Salle 4 : Proportion. Voici 6 usages envisagés par l'équipe. Validez les 3 usages pertinents et écartez les 3 absurdes. Attention : chaque mauvais choix fait grimper la jauge de surconsommation. »"
-  },
-  {
-    id:4, name:"Droits, inclusion et valeurs", accent:"#524797", hex:COLORS.mauve,
+    id:4, name:"Respect des droits, de l'inclusion et des valeurs", accent:"#524797", hex:COLORS.mauve,
     ink:"#ffffff",
     slogan:"L'IA n'est pas une zone grise.",
     fragment:"ordre",
     unlockLine:"Œil critique validé. Cinq salles, cinq réflexes — il ne vous reste qu'à composer la sortie.",
     rules:[
       "Citer si un contenu est repris (propriété intellectuelle).",
-      "Éviter les contenus biaisés ou stéréotypés.",
-      "Rester accessible à toutes et tous."
+      "Éviter les contenus biaisés ou stéréotypés — pas de « style de » un artiste nommé.",
+      "Rester accessible à toutes et tous, et marquer IA-G tout média généré."
     ],
-    intro:"« Salle 5 : Valeurs. Une image générée par IA est proposée pour la prochaine brochure BF. Mon œil critique y voit 3 problèmes. Et le vôtre ? »"
+    intro:"« Salle 5 : Valeurs. Une image générée par IA est proposée pour la prochaine brochure BF. Mon œil critique y voit 4 problèmes. Et le vôtre ? »"
   }
 ];
 
-const FINAL_CODE = "ACGD";
-const CHARTE_URL = "https://rochikh.github.io/charte-ia-bf/";
+const FINAL_CODE = "ACGO";
+const CHARTE_URL = "https://chartebf.rochane.fr/";
 
 /* mode déterministe pour les tests automatisés : ?test désactive les mélanges */
 const TEST_MODE = new URLSearchParams(location.search).has("test");
@@ -478,7 +479,7 @@ function shuffle(a){
 }
 
 /* ---------------- state ---------------- */
-const SAVE_KEY = "missionIA-BF-v1";
+const SAVE_KEY = "missionIA-BF-v3";   // v3 : ordre des salles et code final changés (charte V3)
 let state = { name:"", timerOn:false, started:false, solved:[false,false,false,false,false], elapsed:0, won:false, mute:false, errors:0, reviewed:false };
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
 function load(){
@@ -934,7 +935,7 @@ function refreshProgress(){
     wrap.appendChild(k);
   });
   wrap.setAttribute("aria-label", `Progression : ${solvedCount()} salle(s) sur 5 déverrouillée(s)`);
-  ["A","C","G","D"].forEach((L,i)=>{
+  ["A","C","G","O"].forEach((L,i)=>{
     const b = document.querySelector(`#fragments b[data-f="${L}"]`);
     if (state.solved[i]){ b.textContent = L; b.classList.add("got"); }
     else { b.textContent = "·"; b.classList.remove("got"); }
@@ -1109,7 +1110,7 @@ function unlockRoom(r){
 }
 function showUnlock(r, revisit){
   const frag = r.fragment === "ordre"
-    ? `<span>Indice final :</span> <b>l'ordre du code est A · C · G · D</b>`
+    ? `<span>Indice final :</span> <b>l'ordre du code est A · C · G · O</b>`
     : `<span>Fragment du code :</span> <b>${r.fragment}</b>`;
   showPanel(`${roomHeader(r)}
     ${revisit ? "<p>Salle déjà déverrouillée — voici votre mémo.</p>" :
@@ -1126,9 +1127,10 @@ function showUnlock(r, revisit){
 }
 
 /* =====================================================================
-   THE 5 PUZZLES
+   THE 5 PUZZLES (définies ici dans l'ordre historique, réordonnées
+   plus bas pour suivre l'ordre des engagements de la charte V3)
    ===================================================================== */
-const PUZZLES = [
+const PUZZLE_DEFS = [
 
 /* ---- Salle 1 : chasse aux 3 erreurs factuelles ---- */
 function(r){
@@ -1230,9 +1232,9 @@ function(r){
     const wrong = docs.map((d,i)=>picks[i]!==d.a?i:-1).filter(i=>i>=0);
     if (!wrong.length){
       showQuiz(r, {
-        question:"« Puis-je utiliser ChatGPT avec mon compte professionnel BF ? »",
-        options:["Oui, c'est un outil comme un autre","Non, sauf indication contraire"], answer:1,
-        explain:"Copilot M365 est l'outil recommandé dans l'environnement sécurisé BF. Les outils externes, c'est compte personnel et données publiques (ou anonymisées) uniquement."
+        question:"« Puis-je utiliser ChatGPT, Claude ou Gemini avec mon adresse @bruxellesformation.brussels ? »",
+        options:["Oui, c'est un outil comme un autre","Non, sauf autorisation de la DSI"], answer:1,
+        explain:"Ces outils ne sont pas couverts par un contrat BF : seule la DSI peut les autoriser. Copilot M365 est l'outil sécurisé pour le travail ; les outils externes, c'est compte personnel et données publiques ou anonymisées uniquement."
       });
     } else {
       const d = docs[wrong[0]];
@@ -1245,9 +1247,9 @@ function(r){
 function(r){
   const M = [
     {code:"IA-A", label:"Assistance — l'IA améliore un contenu existant"},
-    {code:"IA-C", label:"Co-construction — l'IA structure ou rédige une partie"},
-    {code:"IA-G", label:"Génération — l'IA produit l'essentiel du contenu"},
-    {code:"IA-D", label:"Décision/Analyse — l'IA analyse ou oriente une décision"}
+    {code:"IA-C", label:"Co-construction — l'IA structure ou rédige une partie, la majorité du texte reste de votre main"},
+    {code:"IA-G", label:"Génération — l'IA produit l'essentiel du contenu final"},
+    {code:"IA-O", label:"Oriente une décision — l'IA analyse, interprète ou oriente une décision"}
   ];
   const situations = [
     {t:"« J'ai demandé à Copilot de corriger l'orthographe de mon mail. »", a:0,
@@ -1257,7 +1259,7 @@ function(r){
     {t:"« L'illustration de mon article Magellan est entièrement générée. »", a:2,
      why:"L'IA a produit l'essentiel du contenu : Génération, IA-G."},
     {t:"« J'ai donné un tableau Excel à Copilot pour identifier des tendances. »", a:3,
-     why:"L'IA analyse et oriente une interprétation : Décision/Analyse, IA-D."}
+     why:"L'IA analyse et oriente une décision — la décision finale reste humaine et assumée : IA-O."}
   ];
   if (!TEST_MODE) shuffle(situations);
   showPanel(`${roomHeader(r, [2,"Énigme"])}
@@ -1362,27 +1364,44 @@ function(r){
   });
 },
 
-/* ---- Salle 5 : l'œil critique ---- */
+/* ---- Salle 5 : l'œil critique (image SVG intégrée, 4 problèmes à repérer) ---- */
 function(r){
   const obs = [
-    {t:"Tous les personnages de l'image se ressemblent : même âge, même morphologie, même couleur de peau.", pb:true,
-     why:"Biais et stéréotypes : une brochure BF doit refléter la diversité réelle des publics bruxellois."},
-    {t:"L'image affiche « 9 personnes sur 10 réussissent grâce à l'IA » sans aucune source.", pb:true,
+    {t:"Les cinq personnages sont identiques : même visage, même âge, même couleur de peau.", pb:true,
+     why:"Biais et stéréotypes : les générateurs ont des biais, les contourner est de votre responsabilité. Une brochure BF doit refléter la diversité réelle des publics bruxellois."},
+    {t:"Le bandeau affiche « 9 personnes sur 10 réussissent grâce à l'IA » sans aucune source.", pb:true,
      why:"Une statistique sans source ne se diffuse pas — on cite ou on retire."},
-    {t:"Le style imite de façon reconnaissable celui d'un illustrateur célèbre.", pb:true,
-     why:"Propriété intellectuelle : imiter le style identifiable d'un artiste pose un problème de droits et d'éthique."},
+    {t:"La signature « à la manière de Van Dorne » imite le style d'un artiste nommé.", pb:true,
+     why:"Droits d'auteur : la charte interdit de générer « dans le style de » un artiste nommé, ou tout personnage, marque ou œuvre identifiable."},
+    {t:"Aucune mention « Image générée par IA (IA-G) » n'apparaît sur le média.", pb:true,
+     why:"Le signalement IA-G est obligatoire sur le média ou dans sa description — la traçabilité prime sur l'élégance."},
     {t:"Les couleurs reprennent le bleu de Bruxelles Formation.", pb:false},
     {t:"L'image montre une salle de formation avec des ordinateurs.", pb:false},
-    {t:"Le format est adapté à une brochure imprimée.", pb:false}
+    {t:"Le format convient à une brochure imprimée.", pb:false}
   ];
   if (!TEST_MODE) shuffle(obs);
+  /* l'image incriminée, dessinée en SVG : les problèmes sont réellement visibles */
+  const P = `<g><circle cx="0" cy="0" r="16" fill="#f0c9a5"/>
+    <path d="M -14 14 Q -14 10 -10 10 L 10 10 Q 14 10 14 14 L 14 52 Q 14 66 0 66 Q -14 66 -14 52 Z" fill="#3a6fb5"/>
+    <circle cx="-5" cy="-3" r="2" fill="#16345f"/><circle cx="5" cy="-3" r="2" fill="#16345f"/>
+    <path d="M -5 6 Q 0 10 5 6" stroke="#16345f" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`;
   showPanel(`${roomHeader(r, [2,"Énigme"])}
-    <p><strong>Repérez les 3 problèmes</strong> de cette image générée par IA, proposée pour la brochure BF :</p>
-    <div class="fake-image" aria-label="Description de l'image générée">
-      Image générée — « Apprenants du futur » : un groupe de personnes souriantes dans une salle de formation
-      lumineuse aux couleurs BF, un bandeau « 9 personnes sur 10 réussissent grâce à l'IA »,
-      le tout dans un style d'illustration très caractéristique d'un artiste connu.
-    </div>
+    <p><strong>Repérez les 4 problèmes</strong> de cette image générée par IA, proposée pour la brochure BF :</p>
+    <svg viewBox="0 0 760 400" role="img" style="width:100%; border:3px solid var(--mauve); border-radius:12px 12px 36px 36px; background:#fff; margin:14px 0"
+         aria-label="Image générée pour la brochure : cinq personnages identiques dans une salle de formation aux couleurs BF, un bandeau « 9 personnes sur 10 réussissent grâce à l'IA » sans source, une signature « à la manière de Van Dorne », et aucune mention IA-G.">
+      <rect x="0" y="0" width="760" height="400" fill="#f3f6fb"/>
+      <rect x="0" y="0" width="760" height="74" fill="#16345f"/>
+      <text x="30" y="47" font-family="'Space Grotesk',Arial" font-weight="700" font-size="30" fill="#fff">Apprenants du futur</text>
+      <rect x="588" y="18" width="20" height="40" rx="5" fill="#edcb0c"/><rect x="614" y="18" width="20" height="40" rx="5" fill="#47b7a4"/>
+      <rect x="640" y="18" width="20" height="40" rx="5" fill="#f5810c"/><rect x="666" y="18" width="20" height="40" rx="5" fill="#4eae33"/>
+      <rect x="692" y="18" width="20" height="40" rx="5" fill="#524797"/>
+      <rect x="60" y="230" width="640" height="14" rx="7" fill="#c9d4e4"/>
+      ${[0,1,2,3,4].map(i=>`<rect x="${94+i*130}" y="186" width="52" height="38" rx="4" fill="#41557a"/><rect x="${98+i*130}" y="190" width="44" height="26" rx="2" fill="#b9d7f2"/>`).join("")}
+      ${[0,1,2,3,4].map(i=>`<g transform="translate(${120+i*130},156)">${P}</g>`).join("")}
+      <rect x="110" y="272" width="540" height="56" rx="12" fill="#edcb0c"/>
+      <text x="380" y="307" text-anchor="middle" font-family="'Space Grotesk',Arial" font-weight="700" font-size="24" fill="#5d4f06">9 personnes sur 10 réussissent grâce à l'IA</text>
+      <text x="730" y="378" text-anchor="end" font-family="Georgia,serif" font-style="italic" font-size="17" fill="#8a7fb8">à la manière de Van Dorne</text>
+    </svg>
     <div>${obs.map((o,i)=>`<button class="obs-btn" aria-pressed="false" data-i="${i}">${esc(o.t)}</button>`).join("")}</div>
     ${feedbackBox()}
     <div class="btn-row">
@@ -1406,7 +1425,7 @@ function(r){
       showQuiz(r, {
         question:"Vrai ou faux : « Une image générée par IA peut être diffusée sans vérification si elle est jolie. »",
         options:["Vrai","Faux"], answer:1,
-        explain:"Avant diffusion : vérifier les biais et stéréotypes, les droits, l'accessibilité — et apposer le marquage IA-G."
+        explain:"Avant diffusion : vérifier les biais et stéréotypes, les droits (jamais « dans le style de » un artiste nommé), l'accessibilité — et apposer la mention « Image générée par IA (IA-G) » sur le média."
       });
     } else {
       const missed = pbs.filter(i=>!sel.has(i));
@@ -1418,6 +1437,10 @@ function(r){
   });
 }
 ];
+
+/* Ordre des salles selon la charte V3 :
+   1 responsabilité · 2 proportion · 3 données · 4 transparence · 5 droits */
+const PUZZLES = [PUZZLE_DEFS[0], PUZZLE_DEFS[3], PUZZLE_DEFS[1], PUZZLE_DEFS[2], PUZZLE_DEFS[4]];
 
 /* =====================================================================
    FINAL — keypad & victoire
@@ -1487,7 +1510,7 @@ function openKeypad(){
     <p>Assemblez les 4 fragments récoltés, dans le bon ordre, sur le clavier mural.</p>
     <div id="codeDisplay" aria-live="polite">— — — —</div>
     <div id="keypadGrid">
-      ${["A","C","G","D"].map(k=>`<button data-k="${k}">${k}</button>`).join("")}
+      ${["A","C","G","O"].map(k=>`<button data-k="${k}">${k}</button>`).join("")}
     </div>
     ${feedbackBox()}
     <div class="btn-row">
@@ -1526,7 +1549,7 @@ function openKeypad(){
             }, 800);
           }
         } else {
-          setFb(false, "Code refusé. Les 4 lettres sont celles des marquages de la salle 3 — dans l'ordre où la charte les présente.");
+          setFb(false, "Code refusé. Les 4 lettres sont celles des marquages de la salle 4 — dans l'ordre où la charte les présente.");
           entered = ""; setTimeout(refresh, 700);
         }
       }

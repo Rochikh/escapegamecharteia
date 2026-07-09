@@ -1,8 +1,8 @@
 # Mission IA — L'Escape Game de la Charte
 
-Escape game 3D dans le navigateur pour découvrir la **Charte IA de Bruxelles Formation** :
+Escape game 3D dans le navigateur pour découvrir la **Charte IA de Bruxelles Formation (Version 3, 2026)** :
 5 salles à déverrouiller (une par engagement), des énigmes tirées de la charte et de sa FAQ,
-un code final **A · C · G · D** (les 4 marquages IA) et un **Permis IA BF** personnalisé à la clé.
+un code final **A · C · G · O** (les 4 marquages IA) et un **Permis IA BF** personnalisé à la clé.
 
 ## Jouer
 
@@ -26,10 +26,10 @@ jointe Teams/mail.
 | Salle | Engagement | Slogan |
 |---|---|---|
 | 1 | Responsabilité et esprit critique | « L'IA propose, l'humain décide. » |
-| 2 | Protection des données | « Interne sécurisé ≠ externe public. » |
-| 3 | Transparence des usages | « Si l'IA a vraiment contribué, ça se dit. » |
-| 4 | Usage responsable et proportionné | « Tout faire avec l'IA est aussi absurde que ne rien faire avec. » |
-| 5 | Droits, inclusion et valeurs | « L'IA n'est pas une zone grise. » |
+| 2 | Usage responsable et proportionné | « L'IA est une option, pas la solution. » |
+| 3 | Protection des données et des informations | « Interne sécurisé ≠ externe public. » |
+| 4 | Transparence des usages | « Si l'IA a vraiment contribué, ça se dit. » |
+| 5 | Respect des droits, de l'inclusion et des valeurs | « L'IA n'est pas une zone grise. » |
 
 ## Déployer sur GitHub Pages
 
@@ -37,4 +37,4 @@ jointe Teams/mail.
 2. Source : **Deploy from a branch** → branche principale → dossier **/ (root)** → **Save**
 3. Après 1–2 minutes, le jeu est accessible sur `https://<votre-pseudo>.github.io/escapegamecharteia/`
 
-La charte complète reste consultable sur [rochikh.github.io/charte-ia-bf](https://rochikh.github.io/charte-ia-bf/).
+La charte complète (V3) reste consultable sur [chartebf.rochane.fr](https://chartebf.rochane.fr/).
