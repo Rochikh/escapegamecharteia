@@ -1452,13 +1452,14 @@ function showSas(){
   if (!TEST_MODE) shuffle(items);
   showPanel(`<span class="kicker">Porte de sortie</span>
     <h2>Le sas de NOVA</h2>
-    <div class="narration">« Dernière formalité avant le clavier : remettez les 5 slogans dans l'ordre des salles — salle 1 d'abord, salle 5 en dernier. Si vous les avez vraiment retenus, ce sas s'ouvrira tout seul. »</div>
+    <div class="narration">« Petite révision facultative avant le clavier : remettez les 5 slogans dans l'ordre des salles — salle 1 d'abord, salle 5 en dernier. Vous préférez sortir tout de suite ? Le clavier vous attend juste à côté. »</div>
     <div id="sasList">${items.map(it=>`
       <button class="obs-btn" data-i="${it.i}" aria-pressed="false">« ${esc(it.slogan)} »<strong class="sas-n"></strong></button>`).join("")}
     </div>
     ${feedbackBox()}
     <div class="btn-row">
       <button class="btn" id="validate">Ouvrir le sas</button>
+      <button class="btn secondary" id="sasSkip">J'ai le code — aller au clavier</button>
       <button class="btn secondary" id="backHall">Retour au hall</button>
     </div>`);
   panel.querySelectorAll("#sasList .obs-btn").forEach(b=>{
@@ -1474,6 +1475,7 @@ function showSas(){
     });
   });
   $("#backHall").addEventListener("click", closePanel);
+  $("#sasSkip").addEventListener("click", ()=>{ state.reviewed = true; save(); showKeypad(); });
   $("#validate").addEventListener("click", ()=>{
     if (order.length !== 5){ setFb(false, "Cliquez les 5 slogans dans l'ordre des salles (1 à 5).", false); return; }
     const wrong = order.findIndex((v,pos)=>v!==pos);
@@ -1494,7 +1496,6 @@ function openKeypad(){
   AUDIO.setMood(null); setTint(null);
   if (pendingUnlock !== null){ markDoorUnlocked(pendingUnlock, false); pendingUnlock = null; }
   if (state.won){ showVictory(); return; }
-  if (solvedCount()===5 && !state.reviewed){ showSas(); return; }
   if (solvedCount()<5){
     showPanel(`<span class="kicker">Porte de sortie</span>
       <h2>Code de sortie requis</h2>
@@ -1504,6 +1505,10 @@ function openKeypad(){
     $("#backHall").addEventListener("click", closePanel);
     return;
   }
+  if (!state.reviewed){ showSas(); return; }   // révision facultative, contournable par le sas
+  showKeypad();
+}
+function showKeypad(){
   entered = "";
   showPanel(`<span class="kicker">Porte de sortie</span>
     <h2>Composez le code final</h2>
